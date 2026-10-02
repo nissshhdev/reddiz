@@ -1,29 +1,22 @@
 // State management
 const state = {
-  currentSubreddit: 'EarthPorn',
+  currentSubredditQuery: '',
+  subreddits: [],
   sort: 'hot',
-  images: [], // array of { index, id, title, author, originalUrl, proxyUrl, filename, ext }
+  images: [], // array of { index, id, title, author, originalUrl, proxyUrl, filename, ext, subreddit }
   currentIndex: 0,
-  annotations: {}, // map of index -> { caption, tags: [], bboxes: [], isAnnotated, imageWidth, imageHeight }
+  annotations: {}, // map of index -> { caption, tags: [], bboxes: [], isAnnotated, isIgnored, imageWidth, imageHeight }
   classes: ['subject', 'foreground', 'background'],
   activeClass: 'subject',
   exportFormat: 'yolo',
   isDrawing: false,
   drawStart: null,
   currentBox: null,
-  lastAnnotation: null // stores the previous image's annotation to copy as default
+  lastAnnotation: null
 };
 
-// Material 3 Harmonious Palette for Bounding Boxes
 const CLASS_COLORS = [
-  '#a8c7fa', // M3 Primary
-  '#a6ee98', // M3 Tertiary (Green)
-  '#f2b8b5', // M3 Error (Coral Red)
-  '#fdd663', // M3 Warning (Yellow)
-  '#d7aefb', // M3 Violet
-  '#c2e7ff', // M3 Light Blue
-  '#fcad70', // M3 Orange
-  '#80cbc4'  // M3 Teal
+  '#000000', '#ff3300', '#0055ff', '#00aa55', '#9900ee', '#e67e22', '#16a085', '#d35400'
 ];
 
 function getClassColor(className) {
@@ -46,12 +39,13 @@ const stageWrapper = document.getElementById('stage-wrapper');
 const imageCounter = document.getElementById('image-counter');
 const statusIndicator = document.getElementById('status-indicator');
 const filmstrip = document.getElementById('filmstrip');
+const currentSubIndicator = document.getElementById('current-sub-indicator');
 
 const btnPrev = document.getElementById('btn-prev-img');
 const btnNext = document.getElementById('btn-next-img');
 const btnBack = document.getElementById('btn-back');
+const btnIgnore = document.getElementById('btn-ignore-img');
 const btnSaveNext = document.getElementById('btn-save-next');
-const btnReset = document.getElementById('btn-reset-current');
 
 const redditPostTitle = document.getElementById('reddit-post-title');
 const annotationCaption = document.getElementById('annotation-caption');
@@ -65,7 +59,6 @@ const inheritedPill = document.getElementById('inherited-pill');
 
 const headerProgressCount = document.getElementById('header-progress-count');
 const footerProgressPct = document.getElementById('footer-progress-pct');
-const progressFill = document.getElementById('progress-fill');
 
 const btnOpenExport = document.getElementById('btn-open-export');
 const exportModal = document.getElementById('export-modal');
@@ -81,56 +74,30 @@ const modalClassesList = document.getElementById('modal-classes-list');
 
 // Init
 window.addEventListener('DOMContentLoaded', () => {
-  setupRippleEffects();
   setupEventListeners();
   renderClassChips();
-  // Automatically fetch initial preset
-  fetchSubreddit(state.currentSubreddit);
+  // DO NOT fetch any default subreddit! Let the user search for themselves.
+  inputSubreddit.focus();
 });
-
-// Material Fluid Ripple Effect
-function setupRippleEffects() {
-  document.addEventListener('click', (e) => {
-    const target = e.target.closest('.ripple-surface');
-    if (!target) return;
-
-    const rect = target.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    const size = Math.max(rect.width, rect.height);
-    ripple.style.width = ripple.style.height = `${size}px`;
-    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-
-    target.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-  });
-}
 
 // Event Listeners
 function setupEventListeners() {
   btnFetch.addEventListener('click', () => {
-    fetchSubreddit(inputSubreddit.value.trim());
+    fetchSubreddits(inputSubreddit.value.trim());
   });
 
   inputSubreddit.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') fetchSubreddit(inputSubreddit.value.trim());
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      fetchSubreddits(inputSubreddit.value.trim());
+    }
   });
 
   selectSort.addEventListener('change', () => {
     state.sort = selectSort.value;
-    fetchSubreddit(inputSubreddit.value.trim());
-  });
-
-  // Preset pills
-  document.querySelectorAll('.m3-filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.m3-filter-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      const sub = chip.getAttribute('data-sub');
-      inputSubreddit.value = sub;
-      fetchSubreddit(sub);
-    });
+    if (inputSubreddit.value.trim()) {
+      fetchSubreddits(inputSubreddit.value.trim());
+    }
   });
 
   // Navigation
@@ -138,7 +105,7 @@ function setupEventListeners() {
   btnBack.addEventListener('click', () => navigateImage(-1));
   btnNext.addEventListener('click', () => navigateImage(1));
   btnSaveNext.addEventListener('click', () => saveAndNext());
-  btnReset.addEventListener('click', resetCurrentAnnotation);
+  if (btnIgnore) btnIgnore.addEventListener('click', () => ignoreAndNext());
 
   // Keyboard navigation
   window.addEventListener('keydown', (e) => {
@@ -157,6 +124,8 @@ function setupEventListeners() {
       navigateImage(1);
     } else if (e.key === 'Enter') {
       saveAndNext();
+    } else if (e.key === 'x' || e.key === 'X' || e.key === 'Delete') {
+      ignoreAndNext();
     }
   });
 
@@ -180,7 +149,7 @@ function setupEventListeners() {
     }
   });
 
-  // Canvas drawing for bounding boxes
+  // Canvas drawing
   setupBboxCanvas();
 
   // Export Modal
@@ -188,9 +157,9 @@ function setupEventListeners() {
   btnCloseModal.addEventListener('click', () => exportModal.classList.remove('open'));
   btnCancelExport.addEventListener('click', () => exportModal.classList.remove('open'));
 
-  document.querySelectorAll('.format-m3-card').forEach(card => {
+  document.querySelectorAll('.format-swiss-card').forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.format-m3-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.format-swiss-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       state.exportFormat = card.getAttribute('data-format');
     });
@@ -199,42 +168,55 @@ function setupEventListeners() {
   btnConfirmDownload.addEventListener('click', downloadDatasetZip);
 }
 
-// Fetch Images from Subreddit API
-async function fetchSubreddit(sub) {
-  if (!sub) return;
-  state.currentSubreddit = sub;
+// Fetch Subreddit(s) with multi-query support
+async function fetchSubreddits(query) {
+  if (!query) {
+    alert('Please enter one or more subreddits (e.g. "cats" or "cats, EarthPorn").');
+    return;
+  }
+
+  state.currentSubredditQuery = query;
   btnFetch.disabled = true;
   fetchSpinner.style.display = 'inline-block';
-  fetchIcon.style.display = 'none';
+  fetchIcon.textContent = 'FETCHING...';
 
   try {
-    const res = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(sub)}&sort=${state.sort}&limit=50`);
+    const res = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=25`);
     const data = await res.json();
 
     if (!data.success || !data.images || data.images.length === 0) {
-      alert(`No images found in r/${sub}. The subreddit might be text-only, banned, or private.`);
+      alert(`No images found for "${query}". Error: ${data.error || 'Check spelling or verify subreddits are active.'}`);
       return;
     }
 
     state.images = data.images;
+    state.subreddits = data.subreddits || [query];
     state.currentIndex = 0;
     state.annotations = {};
     state.lastAnnotation = null;
 
+    if (currentSubIndicator) {
+      currentSubIndicator.textContent = state.subreddits.map(s => `r/${s}`).join(' + ');
+    }
+
     renderFilmstrip();
     loadImage(0);
     updateProgress();
+
+    if (data.warnings && data.warnings.length > 0) {
+      console.warn('Some subreddits had warnings:', data.warnings);
+    }
   } catch (err) {
-    console.error('Error fetching subreddit:', err);
-    alert('Failed to connect to Reddit server. Please verify your connection.');
+    console.error('Fetch error:', err);
+    alert(`Failed to fetch: ${err.message}. Please check your connection or wait a few moments.`);
   } finally {
     btnFetch.disabled = false;
     fetchSpinner.style.display = 'none';
-    fetchIcon.style.display = 'inline-block';
+    fetchIcon.textContent = 'FETCH MEDIA';
   }
 }
 
-// Load Image into view with smooth fluid transition
+// Load Image into view
 function loadImage(index) {
   if (index < 0 || index >= state.images.length) return;
   state.currentIndex = index;
@@ -243,21 +225,16 @@ function loadImage(index) {
   imagePlaceholder.style.display = 'none';
   activeImage.style.display = 'block';
 
-  // Smooth entrance animation
-  stageWrapper.classList.remove('animating-in');
-  void stageWrapper.offsetWidth; // trigger reflow
-  stageWrapper.classList.add('animating-in');
-
   // Highlight filmstrip item
-  document.querySelectorAll('.filmstrip-thumb').forEach((el, idx) => {
+  document.querySelectorAll('.thumb-cell').forEach((el, idx) => {
     el.classList.toggle('active', idx === index);
   });
-  const activeThumb = document.querySelector(`.filmstrip-thumb[data-index="${index}"]`);
+  const activeThumb = document.querySelector(`.thumb-cell[data-index="${index}"]`);
   if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 
   // Update Counters & Titles
-  imageCounter.textContent = `Image ${index + 1} of ${state.images.length}`;
-  redditPostTitle.textContent = `${item.title} (by ${item.author || 'anon'})`;
+  imageCounter.textContent = `INDEX ${String(index + 1).padStart(2, '0')} / ${String(state.images.length).padStart(2, '0')}`;
+  redditPostTitle.textContent = `${item.title} (in r/${item.subreddit}, by ${item.author || 'anon'})`;
 
   // Set image source via proxy
   activeImage.src = item.proxyUrl;
@@ -267,24 +244,25 @@ function loadImage(index) {
 
     // Check if this image already has annotations
     if (!state.annotations[index]) {
-      // Inherit previous annotation if available! (CORE USER REQUIREMENT)
+      // Inherit previous annotation if available
       if (state.lastAnnotation) {
         state.annotations[index] = {
           caption: state.lastAnnotation.caption || generateDefaultCaption(item.title),
           tags: [...state.lastAnnotation.tags],
           bboxes: state.lastAnnotation.bboxes ? state.lastAnnotation.bboxes.map(b => ({ ...b })) : [],
           isAnnotated: false,
+          isIgnored: false,
           imageWidth: activeImage.naturalWidth,
           imageHeight: activeImage.naturalHeight
         };
-        inheritedPill.style.display = 'inline-flex';
+        inheritedPill.style.display = 'inline-block';
       } else {
-        // First image default initialization
         state.annotations[index] = {
           caption: generateDefaultCaption(item.title),
-          tags: [state.currentSubreddit.toLowerCase(), 'photo'],
+          tags: [item.subreddit ? item.subreddit.toLowerCase() : 'photo'],
           bboxes: [],
           isAnnotated: false,
+          isIgnored: false,
           imageWidth: activeImage.naturalWidth,
           imageHeight: activeImage.naturalHeight
         };
@@ -297,6 +275,10 @@ function loadImage(index) {
     renderAnnotationForm();
     redrawCanvas();
     updateStatusBadge();
+  };
+
+  activeImage.onerror = () => {
+    console.warn('Image load error for', item.originalUrl);
   };
 }
 
@@ -316,15 +298,15 @@ function renderAnnotationForm() {
 // Tags Management
 function renderTags() {
   const annot = state.annotations[state.currentIndex] || { tags: [] };
-  const existingBadges = tagsContainer.querySelectorAll('.tag-m3-badge');
+  const existingBadges = tagsContainer.querySelectorAll('.swiss-tag');
   existingBadges.forEach(b => b.remove());
 
   annot.tags.forEach(tag => {
     const badge = document.createElement('div');
-    badge.className = 'tag-m3-badge';
+    badge.className = 'swiss-tag';
     badge.innerHTML = `
       <span>${escapeHtml(tag)}</span>
-      <button type="button" data-tag="${escapeHtml(tag)}"><span class="material-symbols-rounded">close</span></button>
+      <button type="button" data-tag="${escapeHtml(tag)}">&times;</button>
     `;
     badge.querySelector('button').addEventListener('click', () => removeTag(tag));
     tagsContainer.insertBefore(badge, tagInput);
@@ -355,21 +337,21 @@ function renderBboxList() {
   bboxList.innerHTML = '';
 
   if (!annot.bboxes || annot.bboxes.length === 0) {
-    bboxList.innerHTML = `<span style="font-size: 0.78rem; color: var(--md-sys-color-outline); font-style: italic;">No bounding boxes drawn. Drag cursor over image to add.</span>`;
+    bboxList.innerHTML = `<span style="font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--swiss-text-dim);">// NO BOUNDING BOXES DRAWN</span>`;
     return;
   }
 
   annot.bboxes.forEach((box, idx) => {
     const color = getClassColor(box.label);
     const item = document.createElement('div');
-    item.className = 'bbox-m3-card';
+    item.className = 'bbox-ruled-item';
     item.innerHTML = `
-      <div style="display: flex; align-items: center;">
-        <span class="bbox-color-indicator" style="background: ${color};"></span>
-        <strong style="color: var(--md-sys-color-on-surface);">${escapeHtml(box.label)}</strong>
-        <span style="color: var(--md-sys-color-outline); margin-left: 8px; font-size: 0.75rem;">(${Math.round(box.width * 100)}% × ${Math.round(box.height * 100)}%)</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display:inline-block; width:8px; height:8px; background:${color};"></span>
+        <strong>${escapeHtml(box.label)}</strong>
+        <span style="color: var(--swiss-text-dim); font-size: 0.72rem;">[${Math.round(box.width * 100)}% x ${Math.round(box.height * 100)}%]</span>
       </div>
-      <button type="button" class="m3-btn m3-btn-outlined" style="height: 26px; padding: 0 8px; font-size: 0.72rem; color: var(--md-sys-color-error); border-color: rgba(242, 184, 181, 0.3);" data-idx="${idx}">Delete</button>
+      <button type="button" data-idx="${idx}">&times; DEL</button>
     `;
     item.querySelector('button').addEventListener('click', () => {
       annot.bboxes.splice(idx, 1);
@@ -386,10 +368,12 @@ function renderClassChips() {
   state.classes.forEach(c => {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = `m3-filter-chip ripple-surface ${c === state.activeClass ? 'active' : ''}`;
+    chip.className = `swiss-tag ${c === state.activeClass ? 'active' : ''}`;
+    chip.style.cursor = 'pointer';
+    chip.style.border = c === state.activeClass ? '2px solid red' : '1px solid #000';
     const color = getClassColor(c);
     chip.innerHTML = `
-      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color};"></span>
+      <span style="display:inline-block; width:6px; height:6px; background:${color}; margin-right:4px;"></span>
       ${escapeHtml(c)}
     `;
 
@@ -464,14 +448,12 @@ function redrawCanvas() {
   const w = bboxCanvas.width;
   const h = bboxCanvas.height;
 
-  // Draw saved boxes
   if (annot && annot.bboxes) {
     annot.bboxes.forEach(box => {
       drawBox(box, w, h, false);
     });
   }
 
-  // Draw active drawing box
   if (state.currentBox) {
     drawBox(state.currentBox, w, h, true);
   }
@@ -486,21 +468,16 @@ function drawBox(box, w, h, isLive) {
 
   ctx.strokeStyle = color;
   ctx.lineWidth = isLive ? 2 : 2.5;
-  ctx.fillStyle = `${color}25`;
+  ctx.fillStyle = `${color}20`;
 
   ctx.fillRect(bx, by, bw, bh);
   ctx.strokeRect(bx, by, bw, bh);
 
-  // Label tag chip on top of bounding box
-  ctx.fillStyle = color;
-  const labelWidth = Math.min(bw, 100);
-  ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(bx, by - 22, labelWidth, 22, [4, 4, 0, 0]) : ctx.rect(bx, by - 22, labelWidth, 22);
-  ctx.fill();
-
-  ctx.fillStyle = '#0842a0'; // contrast text
-  ctx.font = '700 11px "Strichpunkt Sans", system-ui, sans-serif';
-  ctx.fillText(box.label, bx + 6, by - 7);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(bx, by - 18, Math.min(bw, 100), 18);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 11px "Space Mono", monospace';
+  ctx.fillText(box.label, bx + 4, by - 5);
 }
 
 // Filmstrip rendering
@@ -508,7 +485,7 @@ function renderFilmstrip() {
   filmstrip.innerHTML = '';
   state.images.forEach((item, idx) => {
     const thumb = document.createElement('div');
-    thumb.className = `filmstrip-thumb ${idx === state.currentIndex ? 'active' : ''}`;
+    thumb.className = `thumb-cell ${idx === state.currentIndex ? 'active' : ''}`;
     thumb.setAttribute('data-index', idx);
     thumb.innerHTML = `<img src="${item.proxyUrl}" alt="thumb" loading="lazy">`;
     thumb.addEventListener('click', () => {
@@ -524,8 +501,9 @@ function saveCurrentAnnotationState() {
   const annot = state.annotations[state.currentIndex];
   if (annot) {
     annot.caption = annotationCaption.value.trim();
-    annot.isAnnotated = true;
-    // Update the last annotation state to be inherited for subsequent images
+    if (!annot.isIgnored) {
+      annot.isAnnotated = true;
+    }
     state.lastAnnotation = {
       caption: annot.caption,
       tags: [...(annot.tags || [])],
@@ -545,6 +523,21 @@ function saveAndNext() {
   }
 }
 
+function ignoreAndNext() {
+  const annot = state.annotations[state.currentIndex];
+  if (annot) {
+    annot.isIgnored = true;
+    annot.isAnnotated = false;
+  }
+  updateStatusBadge();
+  updateProgress();
+  if (state.currentIndex < state.images.length - 1) {
+    loadImage(state.currentIndex + 1);
+  } else {
+    openExportModal();
+  }
+}
+
 function navigateImage(delta) {
   saveCurrentAnnotationState();
   const nextIdx = state.currentIndex + delta;
@@ -553,29 +546,26 @@ function navigateImage(delta) {
   }
 }
 
-function resetCurrentAnnotation() {
-  state.annotations[state.currentIndex] = {
-    caption: '',
-    tags: [],
-    bboxes: [],
-    isAnnotated: false,
-    imageWidth: activeImage.naturalWidth,
-    imageHeight: activeImage.naturalHeight
-  };
-  renderAnnotationForm();
-  redrawCanvas();
-  updateStatusBadge();
-  updateProgress();
-}
-
 function updateStatusBadge() {
   const annot = state.annotations[state.currentIndex];
-  const isAnnot = annot && annot.isAnnotated;
-  statusIndicator.className = `m3-dot ${isAnnot ? 'annotated' : ''}`;
+  const isAnnot = annot && annot.isAnnotated && !annot.isIgnored;
+  const isIgnored = annot && annot.isIgnored;
 
-  const thumb = document.querySelector(`.filmstrip-thumb[data-index="${state.currentIndex}"]`);
+  if (statusIndicator) {
+    statusIndicator.className = `status-dot ${isAnnot ? 'annotated' : ''}`;
+    if (isIgnored) statusIndicator.style.background = '#ff3333';
+    else statusIndicator.style.background = '';
+  }
+
+  const stageContainer = document.getElementById('stage-container');
+  if (stageContainer) {
+    stageContainer.classList.toggle('image-ignored', !!isIgnored);
+  }
+
+  const thumb = document.querySelector(`.thumb-cell[data-index="${state.currentIndex}"]`);
   if (thumb) {
     thumb.classList.toggle('is-annotated', !!isAnnot);
+    thumb.classList.toggle('is-ignored', !!isIgnored);
   }
 }
 
@@ -583,20 +573,19 @@ function updateProgress() {
   const total = state.images.length;
   if (total === 0) return;
 
-  const count = Object.values(state.annotations).filter(a => a.isAnnotated).length;
+  const count = Object.values(state.annotations).filter(a => a.isAnnotated && !a.isIgnored).length;
   const pct = Math.round((count / total) * 100);
 
-  headerProgressCount.textContent = `${count} / ${total}`;
+  headerProgressCount.textContent = `${count} / ${total} ANNOTATED`;
   footerProgressPct.textContent = `${pct}%`;
-  progressFill.style.width = `${pct}%`;
 
   btnOpenExport.disabled = count === 0;
 }
 
 // Export Dataset Modal & Download
 function openExportModal() {
-  modalSubName.textContent = `r/${state.currentSubreddit}`;
-  const count = Object.values(state.annotations).filter(a => a.isAnnotated).length;
+  modalSubName.textContent = state.subreddits.map(s => `r/${s}`).join(', ') || state.currentSubredditQuery;
+  const count = Object.values(state.annotations).filter(a => a.isAnnotated && !a.isIgnored).length;
   modalTotalImages.textContent = `${count} images`;
   modalClassesList.textContent = state.classes.join(', ');
   exportModal.classList.add('open');
@@ -605,18 +594,19 @@ function openExportModal() {
 async function downloadDatasetZip() {
   btnConfirmDownload.disabled = true;
   downloadSpinner.style.display = 'inline-block';
-  downloadIcon.style.display = 'none';
+  downloadIcon.textContent = 'BUILDING ARCHIVE...';
 
   try {
     const items = [];
     state.images.forEach((img, idx) => {
       const annot = state.annotations[idx];
-      if (annot && annot.isAnnotated) {
+      if (annot && annot.isAnnotated && !annot.isIgnored) {
         items.push({
           id: img.id,
           filename: img.filename,
           originalUrl: img.originalUrl,
           title: img.title,
+          subreddit: img.subreddit,
           annotation: {
             caption: annot.caption,
             tags: annot.tags,
@@ -634,7 +624,7 @@ async function downloadDatasetZip() {
     }
 
     const payload = {
-      subreddit: state.currentSubreddit,
+      subreddit: state.subreddits.join('_'),
       items: items,
       format: state.exportFormat,
       classes: state.classes
@@ -655,7 +645,7 @@ async function downloadDatasetZip() {
     const downloadUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = `reddit_${state.currentSubreddit}_dataset.zip`;
+    a.download = `reddit_${state.subreddits.join('_')}_dataset.zip`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -668,7 +658,7 @@ async function downloadDatasetZip() {
   } finally {
     btnConfirmDownload.disabled = false;
     downloadSpinner.style.display = 'none';
-    downloadIcon.style.display = 'inline-block';
+    downloadIcon.textContent = 'GENERATE & DOWNLOAD ZIP';
   }
 }
 

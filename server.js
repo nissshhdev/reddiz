@@ -8,7 +8,6 @@ const SimpleZip = require('./simple-zip');
 const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// Helper to decode XML entities
 function decodeXml(str) {
   return str
     .replace(/&amp;/g, '&')
@@ -19,43 +18,123 @@ function decodeXml(str) {
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec));
 }
 
-// Fetch RSS feed from Reddit
-function fetchRedditRss(subreddit, sort = 'hot', limit = 50) {
+// In-memory response cache to protect against 429 rate limits
+const cache = new Map(); // key -> { time, data }
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+
+// Fetch a single subreddit RSS with automatic retry on 429
+async function fetchSingleSubredditRss(sub, sort = 'hot', limit = 25, retryCount = 0) {
+  const cleanSub = sub.replace(/^r\//, '').replace(/[^a-zA-Z0-9_]/g, '');
+  if (!cleanSub) return '';
+
+  const cacheKey = `${cleanSub}_${sort}_${limit}`;
+  const cached = cache.get(cacheKey);
+  if (cached && (Date.now() - cached.time < CACHE_TTL)) {
+    return cached.data;
+  }
+
+  let sortPath = '';
+  if (sort === 'new') sortPath = '/new';
+  else if (sort === 'top') sortPath = '/top';
+  else if (sort === 'rising') sortPath = '/rising';
+
+  const feedUrl = `https://www.reddit.com/r/${cleanSub}${sortPath}.rss?limit=${limit}`;
+
   return new Promise((resolve, reject) => {
-    // Sanitize subreddit name
-    const cleanSub = subreddit.replace(/^r\//, '').replace(/[^a-zA-Z0-9_]/g, '');
-    if (!cleanSub) {
-      return reject(new Error('Invalid subreddit name'));
-    }
-
-    let sortPath = '';
-    if (sort === 'new') sortPath = '/new';
-    else if (sort === 'top') sortPath = '/top';
-    else if (sort === 'rising') sortPath = '/rising';
-
-    const feedUrl = `https://www.reddit.com/r/${cleanSub}${sortPath}.rss?limit=${limit}`;
-    const req = https.get(feedUrl, {
+    req = https.get(feedUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml,application/atom+xml,text/xml;q=0.9,*/*;q=0.8',
+        'Cookie': 'over18=1;'
       }
-    }, res => {
+    }, async res => {
+      if (res.statusCode === 429) {
+        if (retryCount < 3) {
+          const waitMs = (retryCount + 1) * 3500;
+          console.log(`[Rate Limit 429] Waiting ${waitMs}ms before retry ${retryCount + 1} for r/${cleanSub}...`);
+          await new Promise(r => setTimeout(r, waitMs));
+          try {
+            const data = await fetchSingleSubredditRss(cleanSub, sort, limit, retryCount + 1);
+            return resolve(data);
+          } catch (retryErr) {
+            return reject(retryErr);
+          }
+        }
+        return reject(new Error(`Reddit is currently rate-limiting queries. Please wait a few seconds and try again.`));
+      }
+
       if (res.statusCode >= 400) {
-        return reject(new Error(`Reddit returned HTTP ${res.statusCode}. Subreddit may be private, banned, or restricted.`));
+        return reject(new Error(`Reddit returned HTTP ${res.statusCode} for r/${cleanSub}. It may be private, quarantined, or restricted.`));
       }
+
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ data, subreddit: cleanSub }));
+      res.on('end', () => {
+        cache.set(cacheKey, { time: Date.now(), data });
+        resolve(data);
+      });
     });
+
     req.on('error', reject);
-    req.setTimeout(12000, () => {
+    req.setTimeout(25000, () => {
       req.destroy();
-      reject(new Error('Request to Reddit timed out'));
+      reject(new Error(`Timeout fetching r/${cleanSub}`));
     });
   });
 }
 
-// Extract images from RSS XML
+// Fetch Multiple Subreddits in parallel with delay spacing
+async function fetchMultipleSubreddits(subredditsStr, sort = 'hot', limitPerSub = 25) {
+  // Support comma, space, plus, or semicolon separated list
+  const subs = subredditsStr
+    .split(/[,+;\s]+/)
+    .map(s => s.trim().replace(/^r\//, ''))
+    .filter(Boolean);
+
+  if (subs.length === 0) {
+    throw new Error('Please enter at least one subreddit name.');
+  }
+
+  const allItems = [];
+  const errors = [];
+
+  for (let i = 0; i < subs.length; i++) {
+    const sub = subs[i];
+    if (i > 0) {
+      // Space requests by 1.2 seconds to stay well below Reddit 1 req/sec rate limit
+      await new Promise(r => setTimeout(r, 1200));
+    }
+
+    try {
+      const xml = await fetchSingleSubredditRss(sub, sort, limitPerSub);
+      const items = parseRssImages(xml, sub);
+      allItems.push(...items);
+    } catch (err) {
+      console.warn(`Error on r/${sub}:`, err.message);
+      errors.push(`r/${sub}: ${err.message}`);
+    }
+  }
+
+  // Deduplicate items by originalUrl
+  const seen = new Set();
+  const deduped = [];
+  for (const item of allItems) {
+    if (!seen.has(item.originalUrl)) {
+      seen.add(item.originalUrl);
+      item.index = deduped.length;
+      deduped.push(item);
+    }
+  }
+
+  if (deduped.length === 0 && errors.length > 0) {
+    throw new Error(errors.join(' | '));
+  }
+
+  return { images: deduped, subreddits: subs, errors };
+}
+
 function parseRssImages(xml, subreddit) {
+  if (!xml) return [];
   const entries = xml.split('<entry>').slice(1);
   const items = [];
 
@@ -73,10 +152,7 @@ function parseRssImages(xml, subreddit) {
     const author = authorMatch ? authorMatch[1].trim() : '';
     const updated = updatedMatch ? updatedMatch[1].trim() : new Date().toISOString();
 
-    // Look for i.redd.it, preview.redd.it, i.imgur.com images
     let imgUrl = null;
-
-    // Pattern 1: standard href/src in HTML
     const patterns = [
       /href="([^"]*?(?:i\.redd\.it|preview\.redd\.it|i\.imgur\.com)[^"]*?)"/i,
       /src="([^"]*?(?:i\.redd\.it|preview\.redd\.it|i\.imgur\.com)[^"]*?)"/i,
@@ -95,7 +171,11 @@ function parseRssImages(xml, subreddit) {
     }
 
     if (imgUrl) {
-      // Determine file extension
+      // Normalize preview.redd.it thumbnails to full resolution direct i.redd.it links
+      if (imgUrl.includes('preview.redd.it')) {
+        imgUrl = imgUrl.replace('preview.redd.it', 'i.redd.it').split('?')[0];
+      }
+
       let ext = 'jpg';
       if (imgUrl.includes('.png')) ext = 'png';
       else if (imgUrl.includes('.webp')) ext = 'webp';
@@ -121,7 +201,6 @@ function parseRssImages(xml, subreddit) {
   return items;
 }
 
-// Download image buffer from URL with redirect following
 function downloadImageBuffer(imageUrl) {
   return new Promise((resolve, reject) => {
     function get(u, redirectsLeft = 3) {
@@ -131,8 +210,8 @@ function downloadImageBuffer(imageUrl) {
       
       const req = client.get(u, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
         }
       }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -157,12 +236,10 @@ function downloadImageBuffer(imageUrl) {
   });
 }
 
-// HTTP Server
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -172,22 +249,30 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  // 1. API: Fetch subreddit images
+  // 1. API: Fetch subreddit images (Supports single or multiple comma/space/plus-separated subreddits)
   if (pathname === '/api/fetch-subreddit') {
-    const subreddit = parsedUrl.query.subreddit || 'EarthPorn';
+    const subredditQuery = parsedUrl.query.subreddit || '';
     const sort = parsedUrl.query.sort || 'hot';
-    const limit = parseInt(parsedUrl.query.limit, 10) || 50;
+    const limit = parseInt(parsedUrl.query.limit, 10) || 25;
+
+    if (!subredditQuery.trim()) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({
+        success: false,
+        error: 'Please enter a subreddit name to search.'
+      }));
+    }
 
     try {
-      const { data, subreddit: cleanSub } = await fetchRedditRss(subreddit, sort, limit);
-      const images = parseRssImages(data, cleanSub);
+      const { images, subreddits, errors } = await fetchMultipleSubreddits(subredditQuery, sort, limit);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({
         success: true,
-        subreddit: cleanSub,
+        subreddits,
         sort,
         total: images.length,
-        images
+        images,
+        warnings: errors
       }));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -198,12 +283,16 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 2. API: Image Proxy (Bypasses Reddit CORS & Hotlink headers)
+  // 2. API: Image Proxy
   if (pathname === '/api/proxy-image') {
-    const targetUrl = parsedUrl.query.url;
+    let targetUrl = parsedUrl.query.url;
     if (!targetUrl) {
       res.writeHead(400, { 'Content-Type': 'text/plain' });
       return res.end('Missing url parameter');
+    }
+
+    if (targetUrl.includes('preview.redd.it')) {
+      targetUrl = targetUrl.replace('preview.redd.it', 'i.redd.it').split('?')[0];
     }
 
     try {
@@ -212,7 +301,7 @@ const server = http.createServer(async (req, res) => {
 
       const proxyReq = client.get(targetUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
           'Referer': 'https://www.reddit.com/'
         }
@@ -245,8 +334,8 @@ const server = http.createServer(async (req, res) => {
         const payload = JSON.parse(body);
         const {
           subreddit = 'dataset',
-          items = [], // [{ filename, originalUrl, annotation: { caption, tags, bboxes, ... } }]
-          format = 'yolo', // 'yolo', 'coco', 'jsonl', 'txt'
+          items = [],
+          format = 'yolo',
           classes = []
         } = payload;
 
@@ -258,7 +347,6 @@ const server = http.createServer(async (req, res) => {
         const zip = new SimpleZip();
         const dateStr = new Date().toISOString();
 
-        // Metadata manifest
         const manifest = {
           dataset_name: `reddit_${subreddit}_dataset`,
           created_at: dateStr,
@@ -268,7 +356,6 @@ const server = http.createServer(async (req, res) => {
           items: []
         };
 
-        // For COCO format collection
         const cocoData = {
           info: { description: `Reddit r/${subreddit} Dataset`, date_created: dateStr, version: '1.0' },
           images: [],
@@ -277,9 +364,8 @@ const server = http.createServer(async (req, res) => {
         };
 
         let cocoAnnotationId = 1;
-
-        // Download and pack images concurrently in batches
         const BATCH_SIZE = 5;
+
         for (let i = 0; i < items.length; i += BATCH_SIZE) {
           const chunk = items.slice(i, i + BATCH_SIZE);
           await Promise.all(chunk.map(async (item, chunkIdx) => {
@@ -287,41 +373,40 @@ const server = http.createServer(async (req, res) => {
             const filename = item.filename || `image_${String(itemIndex + 1).padStart(4, '0')}.jpg`;
             const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
 
-            let imgBuffer = null;
             try {
-              imgBuffer = await downloadImageBuffer(item.originalUrl);
+              let downloadTarget = item.originalUrl;
+              if (downloadTarget.includes('preview.redd.it')) {
+                downloadTarget = downloadTarget.replace('preview.redd.it', 'i.redd.it').split('?')[0];
+              }
+              const imgBuffer = await downloadImageBuffer(downloadTarget);
               zip.addFile(`images/${filename}`, imgBuffer);
             } catch (dlErr) {
               console.warn(`Failed downloading image ${item.originalUrl}:`, dlErr.message);
-              // Add a placeholder 1-pixel or text note
               zip.addFile(`images/${filename}.failed.txt`, `Download error: ${dlErr.message}\nURL: ${item.originalUrl}`);
             }
 
             const annot = item.annotation || {};
             const caption = annot.caption || '';
             const tags = annot.tags || [];
-            const bboxes = annot.bboxes || []; // [{ label, x, y, width, height }] in 0-1 normalized coordinates
+            const bboxes = annot.bboxes || [];
 
             manifest.items.push({
               id: item.id || `img_${itemIndex}`,
               image_file: `images/${filename}`,
               title: item.title || '',
+              subreddit: item.subreddit || subreddit,
               original_url: item.originalUrl,
               caption: caption,
               tags: tags,
               bounding_boxes: bboxes
             });
 
-            // Format-specific exports
-            // 1. Text caption file (.txt) alongside image (standard for Stable Diffusion / LoRA training)
             zip.addFile(`annotations/captions/${baseName}.txt`, caption + (tags.length ? `\nTags: ${tags.join(', ')}` : ''));
 
-            // 2. YOLO format (.txt in labels/)
             const yoloLines = [];
             for (const box of bboxes) {
               const classIdx = classes.indexOf(box.label);
               const cid = classIdx >= 0 ? classIdx : 0;
-              // YOLO is: <class_index> <x_center> <y_center> <width> <height>
               const xc = (box.x + box.width / 2).toFixed(6);
               const yc = (box.y + box.height / 2).toFixed(6);
               const w = box.width.toFixed(6);
@@ -330,7 +415,6 @@ const server = http.createServer(async (req, res) => {
             }
             zip.addFile(`labels/${baseName}.txt`, yoloLines.join('\n'));
 
-            // 3. COCO structure builder
             cocoData.images.push({
               id: itemIndex + 1,
               file_name: filename,
@@ -358,10 +442,9 @@ const server = http.createServer(async (req, res) => {
           }));
         }
 
-        // Add YOLO classes.txt & data.yaml
         zip.addFile('classes.txt', classes.join('\n'));
         zip.addFile('data.yaml', [
-          `# YOLOv8 / YOLOv5 Dataset configuration`,
+          `# YOLOv8 / YOLOv11 Dataset configuration`,
           `names:`,
           ...classes.map((c, idx) => `  ${idx}: ${c}`),
           `nc: ${classes.length}`,
@@ -370,23 +453,18 @@ const server = http.createServer(async (req, res) => {
           `val: images/`
         ].join('\n'));
 
-        // Add COCO json
         zip.addFile('annotations/coco_annotations.json', JSON.stringify(cocoData, null, 2));
 
-        // Add JSONL for HuggingFace / Vision-Language tuning (LLaVA, BLIP, ViT)
         const jsonlLines = manifest.items.map(m => JSON.stringify({
           image: m.image_file,
           prompt: "Describe this image in detail.",
           caption: m.caption,
           tags: m.tags,
-          metadata: { title: m.title, url: m.original_url }
+          metadata: { title: m.title, subreddit: m.subreddit, url: m.original_url }
         })).join('\n');
         zip.addFile('dataset.jsonl', jsonlLines);
-
-        // Add overall manifest.json
         zip.addFile('manifest.json', JSON.stringify(manifest, null, 2));
 
-        // Add a training README
         zip.addFile('README.md', [
           `# ${manifest.dataset_name}`,
           `Generated with **Reddit Vision Annotator** on ${dateStr}.`,
@@ -397,28 +475,23 @@ const server = http.createServer(async (req, res) => {
           ``,
           `## Directory Layout`,
           `\`\`\``,
-          `├── images/             # Original raw downloaded images`,
-          `├── labels/             # YOLO format bounding box annotations (<class> <x_c> <y_c> <w> <h>)`,
-          `├── annotations/`,
-          `│   ├── captions/       # Text prompts/captions (.txt) for Diffusion / LoRA training`,
-          `│   └── coco_annotations.json # Full COCO-format JSON`,
-          `├── classes.txt         # Class name definitions`,
-          `├── data.yaml           # Ready-to-use YOLO dataset config`,
-          `├── dataset.jsonl       # JSONL dataset for Vision-Language fine-tuning (LLaVA / BLIP)`,
-          `└── manifest.json       # Master index with full metadata and URLs`,
-          `\`\`\``,
-          ``,
-          `## Ready for AI Training:`,
-          `1. **Object Detection**: Train YOLOv8/v11 using \`yolo detect train data=data.yaml model=yolov8n.pt epochs=50\``,
-          `2. **Diffusion / LoRA**: Use \`images/\` and \`annotations/captions/\` with Kohya_ss, OneTrainer, or Automatic1111`,
-          `3. **Vision-Language**: Load \`dataset.jsonl\` using HuggingFace \`datasets\` library`
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ images/             # Original raw downloaded images`,
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ labels/             # YOLO format bounding box annotations (<class> <x_c> <y_c> <w> <h>)`,
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ annotations/`,
+          `Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ captions/       # Text prompts/captions (.txt) for Diffusion / LoRA training`,
+          `Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ coco_annotations.json # Full COCO-format JSON`,
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ classes.txt         # Class name definitions`,
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ data.yaml           # Ready-to-use YOLO dataset config`,
+          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ dataset.jsonl       # JSONL dataset for Vision-Language fine-tuning (LLaVA / BLIP)`,
+          `Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ manifest.json       # Master index with full metadata and URLs`,
+          `\`\`\``
         ].join('\n'));
 
         const zipBuffer = zip.generateBuffer();
 
         res.writeHead(200, {
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="reddit_${subreddit}_dataset.zip"`,
+          'Content-Disposition': `attachment; filename="reddit_${subreddit.replace(/[^a-zA-Z0-9_-]/g, '_')}_dataset.zip"`,
           'Content-Length': zipBuffer.length
         });
         return res.end(zipBuffer);
@@ -431,9 +504,8 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Static File Server (HTML, CSS, JS)
+  // 4. Static File Server
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
-  
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       filePath = path.join(PUBLIC_DIR, 'index.html');
