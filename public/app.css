@@ -977,3 +977,238 @@ body {
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px rgba(0, 0, 0, 1);
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN & MOBILE OPTIMIZATIONS
+   ========================================================================== */
+
+/* Tablets and small laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .editorial-side-panel {
+    width: 360px;
+  }
+
+  .brand-title {
+    font-size: 2.6rem;
+  }
+
+  .author-cell {
+    font-size: 1.1rem;
+    padding: 10px 14px;
+  }
+
+  .warning-cell {
+    max-width: 220px;
+    font-size: 0.72rem;
+  }
+}
+
+/* Tablets and Large Mobile (<= 850px) */
+@media (max-width: 850px) {
+  body {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .reddiz-header-top {
+    flex-wrap: wrap;
+    min-height: auto;
+  }
+
+  .brand-block {
+    width: 100%;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--swiss-black);
+    justify-content: space-between;
+  }
+
+  .brand-title {
+    font-size: 2.2rem;
+  }
+
+  .header-status-cells {
+    width: 100%;
+    border-left: none;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .status-cell {
+    min-width: 110px;
+    padding: 8px 12px;
+  }
+
+  .warning-cell {
+    display: none; /* Hide lengthy warning on mobile to save vertical real estate */
+  }
+
+  .download-cell {
+    flex: 1;
+    padding: 8px 12px;
+  }
+
+  .reddiz-btn-black {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    width: 100%;
+  }
+
+  .author-cell {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+
+  /* Query row wrap */
+  .reddiz-query-bar {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .query-idx {
+    padding: 8px 12px;
+    min-width: auto;
+  }
+
+  .query-input-wrapper {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 10px;
+  }
+
+  .query-sort-wrapper {
+    padding: 8px 10px;
+  }
+
+  .query-btn-wrapper {
+    width: 100%;
+    border-top: 1px solid var(--swiss-black);
+  }
+
+  .fetch-btn {
+    width: 100%;
+    padding: 10px 16px;
+    justify-content: center;
+  }
+
+  /* Main layout switches from row to vertical stacked column */
+  .reddiz-main-layout {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Vertical gallery converts into a smooth horizontal touch-scroll strip on mobile */
+  .vertical-gallery-strip {
+    width: 100%;
+    height: 110px;
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 2px solid var(--swiss-black);
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+  }
+
+  .vertical-gallery-strip .thumb-cell {
+    width: auto;
+    height: 100%;
+    aspect-ratio: 9 / 16;
+    flex-shrink: 0;
+  }
+
+  /* Stage section */
+  .stage-section {
+    border-right: none;
+    border-bottom: 2px solid var(--swiss-black);
+    height: auto;
+    min-height: 480px;
+  }
+
+  .canvas-viewport-box {
+    padding: 14px 8px;
+    min-height: 460px;
+  }
+
+  .stage-wrapper {
+    height: 420px;
+    max-height: 60vh;
+  }
+
+  .stage-nav-arrow {
+    width: 32px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .stage-nav-arrow.prev { left: 8px; }
+  .stage-nav-arrow.next { right: 8px; }
+
+  /* Side panel full width stacked underneath */
+  .editorial-side-panel {
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+    border-top: none;
+  }
+
+  .row-index-letter {
+    width: 44px;
+    padding: 10px 6px;
+  }
+
+  .row-content-block {
+    padding: 10px 12px;
+  }
+
+  .editorial-footer-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 90;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  }
+
+  .footer-btn {
+    padding: 12px 8px;
+    font-size: 0.78rem;
+  }
+
+  .format-grid-swiss {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small mobile devices (<= 480px) */
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 1.8rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.68rem;
+  }
+
+  .query-input {
+    font-size: 0.85rem;
+  }
+
+  .stage-wrapper {
+    height: 360px;
+  }
+
+  .canvas-index-stamp {
+    top: 8px;
+    left: 8px;
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+
+  .footer-btn {
+    font-size: 0.72rem;
+    padding: 10px 4px;
+  }
+}

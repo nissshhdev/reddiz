@@ -448,6 +448,57 @@ function renderClassChips() {
 function setupBboxCanvas() {
   window.addEventListener('resize', resizeCanvasToImage);
 
+  // Touch support for mobile devices
+  bboxCanvas.addEventListener('touchstart', (e) => {
+    if (!activeImage.src || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = bboxCanvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const y = (touch.clientY - rect.top) / rect.height;
+    state.isDrawing = true;
+    state.drawStart = { x, y };
+    state.currentBox = { x, y, width: 0, height: 0, label: state.activeClass };
+    e.preventDefault();
+  }, { passive: false });
+
+  bboxCanvas.addEventListener('touchmove', (e) => {
+    if (!state.isDrawing || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = bboxCanvas.getBoundingClientRect();
+    const currentX = (touch.clientX - rect.left) / rect.width;
+    const currentY = (touch.clientY - rect.top) / rect.height;
+    const startX = state.drawStart.x;
+    const startY = state.drawStart.y;
+    const x = Math.min(startX, currentX);
+    const y = Math.min(startY, currentY);
+    const width = Math.abs(currentX - startX);
+    const height = Math.abs(currentY - startY);
+    state.currentBox = {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      width: Math.min(1 - x, width),
+      height: Math.min(1 - y, height),
+      label: state.activeClass
+    };
+    redrawCanvas();
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener('touchend', () => {
+    if (!state.isDrawing) return;
+    state.isDrawing = false;
+    if (state.currentBox && state.currentBox.width > 0.02 && state.currentBox.height > 0.02) {
+      const annot = state.annotations[state.currentIndex];
+      if (annot) {
+        if (!annot.bboxes) annot.bboxes = [];
+        annot.bboxes.push(state.currentBox);
+        renderBboxList();
+      }
+    }
+    state.currentBox = null;
+    redrawCanvas();
+  });
+
   bboxCanvas.addEventListener('mousedown', (e) => {
     if (!activeImage.src) return;
     const rect = bboxCanvas.getBoundingClientRect();
@@ -734,4 +785,5 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
 
