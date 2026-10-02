@@ -1,6 +1,6 @@
 /* ==========================================================================
    SWISS INTERNATIONAL STYLE / MODERNIST EDITORIAL DESIGN SYSTEM
-   Inspired by classic Josef MÃ¼ller-Brockmann & modern brutalist grid systems
+   Inspired by classic Josef MÃƒÂ¼ller-Brockmann & modern brutalist grid systems
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Strichpunkt+Sans:ital,wght@0,300..900;1,300..900&display=swap');
@@ -434,7 +434,7 @@ body {
 }
 
 .thumb-cell.is-annotated::after {
-  content: 'âœ“';
+  content: 'Ã¢Å“â€œ';
   position: absolute;
   top: 3px;
   right: 3px;
@@ -716,7 +716,7 @@ body {
 }
 
 .thumb-cell.is-ignored::before {
-  content: '✕';
+  content: 'âœ•';
   position: absolute;
   top: 50%;
   left: 50%;

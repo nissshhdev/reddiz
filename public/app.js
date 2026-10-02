@@ -230,7 +230,7 @@ function loadImage(index) {
     el.classList.toggle('active', idx === index);
   });
   const activeThumb = document.querySelector(`.thumb-cell[data-index="${index}"]`);
-  if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // Update Counters & Titles
   imageCounter.textContent = `INDEX ${String(index + 1).padStart(2, '0')} / ${String(state.images.length).padStart(2, '0')}`;
@@ -431,8 +431,9 @@ function setupBboxCanvas() {
 }
 
 function resizeCanvasToImage() {
-  const w = activeImage.clientWidth;
-  const h = activeImage.clientHeight;
+  const wrapper = document.getElementById('stage-wrapper');
+  const w = wrapper ? wrapper.clientWidth : activeImage.clientWidth;
+  const h = wrapper ? wrapper.clientHeight : activeImage.clientHeight;
   if (w && h) {
     bboxCanvas.width = w;
     bboxCanvas.height = h;

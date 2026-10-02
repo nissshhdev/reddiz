@@ -67,28 +67,34 @@
     </div>
   </header>
 
-  <!-- Main Viewport Layout -->
+  <!-- Main Viewport Layout: 3 Columns (Vertical Carousel | 9:16 Canvas Stage | Side Annotation Panel) -->
   <main class="swiss-main-layout">
-    <!-- Left Stage: Image Viewport + Ruled Filmstrip -->
+    <!-- Column 1: Vertical Carousel Strip -->
+    <nav class="filmstrip-vertical-strip" id="filmstrip" title="Vertical Image Strip">
+      <!-- Rendered dynamically -->
+    </nav>
+
+    <!-- Column 2: 9:16 Cropped Canvas Stage -->
     <section class="stage-section">
       <div class="canvas-viewport-box" id="stage-container">
         
         <div class="canvas-index-stamp">
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
+          <span style="margin-left: 6px; color: var(--swiss-text-dim); font-size: 0.7rem;">[9:16 CROP]</span>
         </div>
 
         <button class="swiss-nav-arrow prev" id="btn-prev-img" title="Previous (A or Left Arrow)">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
 
-        <div class="stage-wrapper" id="stage-wrapper">
+        <div class="stage-wrapper aspect-9-16" id="stage-wrapper">
           <img id="active-image" src="" alt="Active Canvas Image" style="display: none;">
           <canvas id="bbox-canvas"></canvas>
           
-          <div id="image-placeholder" style="text-align: center; color: var(--swiss-text-dim); padding: 80px 40px;">
-            <p style="font-family: 'Space Mono', monospace; font-size: 1.25rem; font-weight: 700; color: var(--swiss-black);">[ SEARCH SUBREDDIT TO START ]</p>
-            <p style="font-size: 0.95rem; margin-top: 10px; color: var(--swiss-text-muted);">Enter one or multiple subreddits above (e.g. <code>cats, wildlifephotography</code>) and press Enter.</p>
+          <div id="image-placeholder" style="text-align: center; color: var(--swiss-text-dim); padding: 80px 20px;">
+            <p style="font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--swiss-black);">[ STANDBY ]</p>
+            <p style="font-size: 0.85rem; margin-top: 10px; color: var(--swiss-text-muted);">Enter subreddit(s) above (e.g. <code>IndianInstaBaddies, Naughty_Navels</code>) and press Enter.</p>
           </div>
         </div>
 
@@ -96,14 +102,9 @@
           <span class="material-symbols-rounded">arrow_forward</span>
         </button>
       </div>
-
-      <!-- Ruled Filmstrip -->
-      <div class="filmstrip-ruled-strip" id="filmstrip">
-        <!-- Rendered dynamically -->
-      </div>
     </section>
 
-    <!-- Right Side Panel: Ruled Table Layout from Reference -->
+    <!-- Column 3: Fixed Right Editorial Side Panel -->
     <aside class="editorial-side-panel">
       <!-- Row 16: Post Title -->
       <div class="editorial-row">
