@@ -49,6 +49,13 @@ const redditPostTitle = document.getElementById('reddit-post-title');
 const annotationCaption = document.getElementById('annotation-caption');
 const btnClearCaption = document.getElementById('btn-clear-caption');
 const btnClearBboxes = document.getElementById('btn-clear-bboxes');
+const btnAiPrompt = document.getElementById("btn-ai-prompt");
+const aiSpinner = document.getElementById("ai-spinner");
+const geminiKeyModal = document.getElementById("gemini-key-modal");
+const inputGeminiApiKey = document.getElementById("input-gemini-api-key");
+const btnCloseGeminiModal = document.getElementById("btn-close-gemini-modal");
+const btnCancelGeminiKey = document.getElementById("btn-cancel-gemini-key");
+const btnSaveGeminiKey = document.getElementById("btn-save-gemini-key");
 const tagsContainer = document.getElementById('tags-container');
 const tagInput = document.getElementById('tag-input');
 const classChips = document.getElementById('class-chips');
@@ -177,6 +184,41 @@ function setupEventListeners() {
     });
   }
 
+  // Gemini AI Prompt Handlers
+  if (btnAiPrompt) {
+    btnAiPrompt.addEventListener('click', () => {
+      const currentItem = state.images[state.currentIndex];
+      if (!currentItem) {
+        alert('Please fetch and select an image first.');
+        return;
+      }
+      const savedKey = localStorage.getItem('gemini_api_key');
+      if (!savedKey) {
+        openGeminiModal();
+      } else {
+        generateAiPrompt(savedKey);
+      }
+    });
+  }
+
+  if (btnCloseGeminiModal) {
+    btnCloseGeminiModal.addEventListener('click', () => geminiKeyModal.classList.remove('open'));
+  }
+  if (btnCancelGeminiKey) {
+    btnCancelGeminiKey.addEventListener('click', () => geminiKeyModal.classList.remove('open'));
+  }
+  if (btnSaveGeminiKey) {
+    btnSaveGeminiKey.addEventListener('click', () => {
+      const key = inputGeminiApiKey.value.trim();
+      if (!key) {
+        alert('Please enter a valid Gemini API key.');
+        return;
+      }
+      localStorage.setItem('gemini_api_key', key);
+      geminiKeyModal.classList.remove('open');
+      generateAiPrompt(key);
+    });
+  }
   if (btnClearBboxes) {
     btnClearBboxes.addEventListener('click', () => {
       const annot = state.annotations[state.currentIndex];
@@ -602,7 +644,7 @@ function renderFilmstrip() {
     thumb.setAttribute('data-index', idx);
     thumb.innerHTML = `<img src="${item.proxyUrl}" alt="thumb" loading="lazy">`;
     thumb.addEventListener('click', () => {
-      saveCurrentAnnotationState();
+      saveCurrentAnnotationState(false);
       loadImage(idx);
     });
     filmstrip.appendChild(thumb);
@@ -610,11 +652,11 @@ function renderFilmstrip() {
 }
 
 // Save Current Image & Advance
-function saveCurrentAnnotationState() {
+function saveCurrentAnnotationState(explicitSave = false) {
   const annot = state.annotations[state.currentIndex];
   if (annot) {
     annot.caption = annotationCaption.value.trim();
-    if (!annot.isIgnored) {
+    if (explicitSave && !annot.isIgnored) {
       annot.isAnnotated = true;
     }
     state.lastAnnotation = {
@@ -628,7 +670,7 @@ function saveCurrentAnnotationState() {
 }
 
 function saveAndNext() {
-  saveCurrentAnnotationState();
+  saveCurrentAnnotationState(true);
   if (state.currentIndex < state.images.length - 1) {
     loadImage(state.currentIndex + 1);
   } else {
@@ -652,7 +694,7 @@ function ignoreAndNext() {
 }
 
 function navigateImage(delta) {
-  saveCurrentAnnotationState();
+  saveCurrentAnnotationState(false);
   const nextIdx = state.currentIndex + delta;
   if (nextIdx >= 0 && nextIdx < state.images.length) {
     loadImage(nextIdx);
@@ -782,3 +824,58 @@ function escapeHtml(str) {
 
 
 
+
+
+function openGeminiModal() {
+  const savedKey = localStorage.getItem('gemini_api_key') || '';
+  inputGeminiApiKey.value = savedKey;
+  geminiKeyModal.classList.add('open');
+  inputGeminiApiKey.focus();
+}
+
+async function generateAiPrompt(apiKey) {
+  const currentItem = state.images[state.currentIndex];
+  if (!currentItem) return;
+
+  btnAiPrompt.disabled = true;
+  if (aiSpinner) aiSpinner.style.display = 'inline-block';
+
+  try {
+    const response = await fetch('/api/gemini-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: apiKey,
+        imageUrl: currentItem.proxyUrl
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      if (data.error && data.error.includes('API key not valid')) {
+        localStorage.removeItem('gemini_api_key');
+        alert('Your Gemini API key appears to be invalid. Please check and re-enter your key.');
+        openGeminiModal();
+        return;
+      }
+      throw new Error(data.error || 'Failed to generate caption with Gemini');
+    }
+
+    // Set caption in form and state
+    annotationCaption.value = data.caption;
+    const annot = state.annotations[state.currentIndex];
+    if (annot) {
+      annot.caption = data.caption;
+      annot.isAnnotated = true; // explicitly mark annotated since AI prompt was generated
+      inheritedPill.style.display = 'none';
+    }
+    updateStatusBadge();
+    updateProgress();
+  } catch (err) {
+    console.error('Gemini generate error:', err);
+    alert('AI Prompt Error: ' + err.message);
+  } finally {
+    btnAiPrompt.disabled = false;
+    if (aiSpinner) aiSpinner.style.display = 'none';
+  }
+}

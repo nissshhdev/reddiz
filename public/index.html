@@ -138,7 +138,13 @@
         <div class="row-content-block">
           <div class="row-title-label">
             <span>IMAGE CAPTION &amp; PROMPT</span>
-            <span style="display:flex; align-items:center; gap:8px;"><span class="sub-dim">SD / LoRA / VLM</span><button id="btn-clear-caption" type="button" class="btn-micro-clear" title="Clear prompt text">&times; CLEAR</button></span>
+            <span style="display:flex; align-items:center; gap:6px;">
+              <button id="btn-ai-prompt" type="button" class="btn-ai-generate" title="Generate detailed visual caption with Gemini AI">
+                <span id="ai-spinner" style="display:none; width:10px; height:10px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:4px;"></span>
+                <span>✨ AI PROMPT</span>
+              </button>
+              <button id="btn-clear-caption" type="button" class="btn-micro-clear" title="Clear prompt text">&times; CLEAR</button>
+            </span>
           </div>
           <textarea id="annotation-caption" class="ruled-textarea" placeholder="Descriptive caption propagated automatically across images..."></textarea>
         </div>
@@ -267,12 +273,36 @@
     }
   </style>
 
+  <!-- Gemini API Key Modal -->
+  <div class="swiss-modal-scrim" id="gemini-key-modal">
+    <div class="swiss-modal-dialog" style="max-width: 480px;">
+      <div class="modal-title-bar">
+        <h2>GEMINI API CONFIGURATION</h2>
+        <button id="btn-close-gemini-modal" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body-pad">
+        <p class="modal-subtitle">
+          Enter your Google Gemini API key to enable AI-assisted visual dataset prompting (analyzing face, skin tone, region, realism, dress, jewellery, background, skies, colors, etc.).
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-family: 'Space Mono', monospace; font-size: 0.75rem; font-weight: 700;">GEMINI API KEY:</label>
+          <input type="password" id="input-gemini-api-key" class="new-class-input" placeholder="AIzaSy..." style="padding: 8px; font-size: 0.85rem;" autocomplete="off">
+          <span style="font-size: 0.72rem; color: var(--swiss-text-dim);">Keys are saved locally in your browser (localStorage). Never shared.</span>
+        </div>
+      </div>
+      <div class="modal-footer-pad">
+        <button id="btn-cancel-gemini-key" class="footer-btn btn-prev" style="flex: initial; padding: 8px 16px;">CANCEL</button>
+        <button id="btn-save-gemini-key" class="footer-btn btn-save" style="flex: initial; padding: 8px 20px;">SAVE &amp; GENERATE</button>
+      </div>
+    </div>
+  </div>
   <script src="/app.js"></script>
   <!-- Vercel Web Analytics -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 

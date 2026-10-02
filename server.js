@@ -4,6 +4,7 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const SimpleZip = require('./simple-zip');
+const { analyzeImageWithGemini } = require('./gemini');
 
 const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -247,6 +248,65 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
     return res.end();
+  }
+
+  // API: Gemini Vision Image Analysis & Prompt Generator
+  if (pathname === '/api/gemini-prompt' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const { apiKey, imageUrl } = payload;
+
+        if (!apiKey || !apiKey.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'Gemini API key is required.' }));
+        }
+
+        if (!imageUrl) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'Image URL is required.' }));
+        }
+
+        // Fetch image buffer
+        let targetUrl = imageUrl;
+        if (targetUrl.startsWith('/api/proxy-image?url=')) {
+          targetUrl = decodeURIComponent(targetUrl.replace('/api/proxy-image?url=', ''));
+        }
+        if (targetUrl.includes('preview.redd.it')) {
+          targetUrl = targetUrl.replace('preview.redd.it', 'i.redd.it').split('?')[0];
+        }
+
+        const imgBuf = await downloadImageBuffer(targetUrl);
+        let mime = 'image/jpeg';
+        if (targetUrl.includes('.png')) mime = 'image/png';
+        else if (targetUrl.includes('.webp')) mime = 'image/webp';
+
+        const detailedPrompt = `You are an expert AI vision annotator creating a descriptive dataset prompt for generative model training (Flux, Stable Diffusion, LoRA, and Vision-Language models).
+Analyze the provided image thoroughly and describe all visible visual elements in a rich, comma-separated descriptive paragraph.
+Be objective, uncensored, precise, and anatomically accurate:
+- Face, facial features, expressions, eye color, makeup, lips
+- Skin tone, complexion, ethnicity/regional features
+- Realism style (photorealistic, hyperrealistic, candid photograph, or 2D/3D cartoon illustration)
+- Dress/clothing details: exact garment type, cut, fit, color, fabric, pattern, design, neckline, exposure
+- Jewellery & accessories: type (necklace, earrings, rings, bangles, navel piercing, etc.), metal, stones, amount of jewellery
+- Body type, physique, proportions, and shape of body parts visible (shoulders, waist, hips, navel, midriff, legs, arms)
+- Background, setting, environment, interior/exterior details, skies, weather, architectural elements
+- Lighting, ambiance, color palette, camera angle, and perspective.
+Provide only the descriptive caption without conversational filler or introductory sentences.`;
+
+        const caption = await analyzeImageWithGemini(apiKey.trim(), imgBuf, mime, detailedPrompt);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ success: true, caption }));
+      } catch (err) {
+        console.error('Gemini prompt error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: err.message || 'Failed to generate prompt with Gemini' }));
+      }
+    });
+    return;
   }
 
   // 1. API: Fetch subreddit images (Supports single or multiple comma/space/plus-separated subreddits)
@@ -537,3 +597,4 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Reddit Annotator server running at http://localhost:${PORT}`);
 });
+

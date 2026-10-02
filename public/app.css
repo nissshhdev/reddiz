@@ -1224,3 +1224,31 @@ body {
   padding: 3px 8px;
   white-space: nowrap;
 }
+
+/* AI Prompt Button */
+.btn-ai-generate {
+  background: var(--swiss-black);
+  border: 1px solid var(--swiss-black);
+  color: var(--swiss-white);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  cursor: pointer;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  letter-spacing: 0.03em;
+}
+
+.btn-ai-generate:hover {
+  background: #ff3300;
+  border-color: #ff3300;
+  color: #fff;
+}
+
+.btn-ai-generate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
