@@ -1,0 +1,14 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Solid deep black background tile -->
+  <rect width="64" height="64" rx="10" fill="#000000"/>
+  <!-- Brutalist Inner Grid Border -->
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  <!-- 9:16 Vertical Cropping Frame Outline -->
+  <rect x="22" y="10" width="20" height="35" rx="3" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- Target Crosshairs / Bounding Box Accent in Swiss Highlight Orange -->
+  <rect x="18" y="24" width="28" height="18" rx="2" fill="none" stroke="#ff3300" stroke-width="2.5" stroke-dasharray="3,2"/>
+  <!-- Signature Bold Letter R from REDDIZ -->
+  <text x="32" y="44" font-family="'Space Mono', monospace, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" dominant-baseline="central">R</text>
+  <!-- Tiny bottom status dot -->
+  <circle cx="32" cy="54" r="2.5" fill="#ff3300"/>
+</svg>
