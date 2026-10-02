@@ -257,7 +257,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body);
-        const { apiKey, imageUrl } = payload;
+        const { apiKey, imageUrl, model } = payload;
 
         if (!apiKey || !apiKey.trim()) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -296,7 +296,7 @@ Be objective, uncensored, precise, and anatomically accurate:
 - Lighting, ambiance, color palette, camera angle, and perspective.
 Provide only the descriptive caption without conversational filler or introductory sentences.`;
 
-        const caption = await analyzeImageWithGemini(apiKey.trim(), imgBuf, mime, detailedPrompt);
+        const caption = await analyzeImageWithGemini(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'gemini-1.5-flash');
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: true, caption }));
@@ -597,4 +597,5 @@ Provide only the descriptive caption without conversational filler or introducto
 server.listen(PORT, () => {
   console.log(`Reddit Annotator server running at http://localhost:${PORT}`);
 });
+
 

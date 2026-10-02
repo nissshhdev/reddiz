@@ -1,9 +1,10 @@
 ﻿const https = require('https');
 
-// Helper to call Google Gemini API with multimodal image + prompt
-async function analyzeImageWithGemini(apiKey, imageBuffer, mimeType, prompt) {
+// Helper to call Google Gemini API with selected model, multimodal image + prompt
+async function analyzeImageWithGemini(apiKey, imageBuffer, mimeType, prompt, model = 'gemini-1.5-flash') {
   const base64Data = imageBuffer.toString('base64');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const cleanModel = (model || 'gemini-1.5-flash').trim();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey}`;
 
   const requestBody = JSON.stringify({
     contents: [
@@ -21,7 +22,7 @@ async function analyzeImageWithGemini(apiKey, imageBuffer, mimeType, prompt) {
     ],
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 1024
+      maxOutputTokens: 1500
     }
   });
 

@@ -52,7 +52,7 @@ const btnClearBboxes = document.getElementById('btn-clear-bboxes');
 const btnAiPrompt = document.getElementById("btn-ai-prompt");
 const aiSpinner = document.getElementById("ai-spinner");
 const geminiKeyModal = document.getElementById("gemini-key-modal");
-const inputGeminiApiKey = document.getElementById("input-gemini-api-key");
+const inputGeminiApiKey = document.getElementById("input-gemini-api-key");`r`nconst selectGeminiModel = document.getElementById("select-gemini-model");
 const btnCloseGeminiModal = document.getElementById("btn-close-gemini-modal");
 const btnCancelGeminiKey = document.getElementById("btn-cancel-gemini-key");
 const btnSaveGeminiKey = document.getElementById("btn-save-gemini-key");
@@ -196,7 +196,8 @@ function setupEventListeners() {
       if (!savedKey) {
         openGeminiModal();
       } else {
-        generateAiPrompt(savedKey);
+        const savedModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
+generateAiPrompt(savedKey, savedModel);
       }
     });
   }
@@ -879,3 +880,5 @@ async function generateAiPrompt(apiKey) {
     if (aiSpinner) aiSpinner.style.display = 'none';
   }
 }
+
+
