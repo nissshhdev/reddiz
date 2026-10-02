@@ -2,7 +2,7 @@
 const state = {
   currentSubredditQuery: '',
   subreddits: [],
-  sort: 'new',
+  sort: 'all',
   images: [], // array of { index, id, title, author, originalUrl, proxyUrl, filename, ext, subreddit }
   currentIndex: 0,
   annotations: {}, // map of index -> { caption, tags: [], bboxes: [], isAnnotated, isIgnored, imageWidth, imageHeight }
@@ -26,7 +26,6 @@ function getClassColor(className) {
 
 // DOM Elements
 const inputSubreddit = document.getElementById('input-subreddit');
-const selectSort = document.getElementById('select-sort');
 const btnFetch = document.getElementById('btn-fetch');
 const fetchSpinner = document.getElementById('fetch-spinner');
 const fetchIcon = document.getElementById('fetch-icon');
@@ -94,12 +93,7 @@ function setupEventListeners() {
     }
   });
 
-  selectSort.addEventListener('change', () => {
-    state.sort = selectSort.value;
-    if (inputSubreddit.value.trim()) {
-      fetchSubreddits(inputSubreddit.value.trim());
-    }
-  });
+
 
   // Navigation
   btnPrev.addEventListener('click', () => navigateImage(-1));
@@ -232,7 +226,7 @@ async function fetchSubreddits(query) {
   fetchIcon.textContent = 'FETCHING...';
 
   try {
-    const res = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=25`);
+    const res = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=100`);
     const data = await res.json();
 
     if (!data.success || !data.images || data.images.length === 0) {
@@ -785,5 +779,6 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
 
 

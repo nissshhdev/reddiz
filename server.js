@@ -1,4 +1,4 @@
-const http = require('http');
+﻿const http = require('http');
 const https = require('https');
 const url = require('url');
 const fs = require('fs');
@@ -23,7 +23,7 @@ const cache = new Map(); // key -> { time, data }
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 // Fetch a single subreddit RSS with automatic retry on 429
-async function fetchSingleSubredditRss(sub, sort = 'hot', limit = 25, retryCount = 0) {
+async function fetchSingleSubredditRss(sub, sort = 'hot', limit = 100, retryCount = 0) {
   const cleanSub = sub.replace(/^r\//, '').replace(/[^a-zA-Z0-9_]/g, '');
   if (!cleanSub) return '';
 
@@ -84,7 +84,7 @@ async function fetchSingleSubredditRss(sub, sort = 'hot', limit = 25, retryCount
 }
 
 // Fetch Multiple Subreddits in parallel with delay spacing
-async function fetchMultipleSubreddits(subredditsStr, sort = 'hot', limitPerSub = 25) {
+async function fetchMultipleSubreddits(subredditsStr, sort = 'hot', limitPerSub = 100) {
   // Support comma, space, plus, or semicolon separated list
   const subs = subredditsStr
     .split(/[,+;\s]+/)
@@ -253,7 +253,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/fetch-subreddit') {
     const subredditQuery = parsedUrl.query.subreddit || '';
     const sort = parsedUrl.query.sort || 'hot';
-    const limit = parseInt(parsedUrl.query.limit, 10) || 25;
+    const limit = parseInt(parsedUrl.query.limit, 10) || 100;
 
     if (!subredditQuery.trim()) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -475,15 +475,15 @@ const server = http.createServer(async (req, res) => {
           ``,
           `## Directory Layout`,
           `\`\`\``,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ images/             # Original raw downloaded images`,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ labels/             # YOLO format bounding box annotations (<class> <x_c> <y_c> <w> <h>)`,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ annotations/`,
-          `Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ captions/       # Text prompts/captions (.txt) for Diffusion / LoRA training`,
-          `Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ coco_annotations.json # Full COCO-format JSON`,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ classes.txt         # Class name definitions`,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ data.yaml           # Ready-to-use YOLO dataset config`,
-          `Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ dataset.jsonl       # JSONL dataset for Vision-Language fine-tuning (LLaVA / BLIP)`,
-          `Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ manifest.json       # Master index with full metadata and URLs`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ images/             # Original raw downloaded images`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ labels/             # YOLO format bounding box annotations (<class> <x_c> <y_c> <w> <h>)`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ annotations/`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ captions/       # Text prompts/captions (.txt) for Diffusion / LoRA training`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ coco_annotations.json # Full COCO-format JSON`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ classes.txt         # Class name definitions`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ data.yaml           # Ready-to-use YOLO dataset config`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ dataset.jsonl       # JSONL dataset for Vision-Language fine-tuning (LLaVA / BLIP)`,
+          `ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ manifest.json       # Master index with full metadata and URLs`,
           `\`\`\``
         ].join('\n'));
 
