@@ -1,0 +1,21 @@
+{
+  "name": "reddit-vision-annotator",
+  "version": "1.0.0",
+  "description": "Web app to fetch images from subreddits, preview, annotate with automated inheritance, and download packaged AI training datasets (YOLO, COCO, Diffusion captions, JSONL).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "reddit",
+    "image-annotation",
+    "ai-dataset",
+    "yolo",
+    "coco",
+    "stable-diffusion",
+    "lora"
+  ],
+  "author": "Amit Kumar",
+  "license": "MIT"
+}
