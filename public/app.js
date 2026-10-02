@@ -1,8 +1,8 @@
-// State management
+﻿// State management
 const state = {
   currentSubredditQuery: '',
   subreddits: [],
-  sort: 'hot',
+  sort: 'new',
   images: [], // array of { index, id, title, author, originalUrl, proxyUrl, filename, ext, subreddit }
   currentIndex: 0,
   annotations: {}, // map of index -> { caption, tags: [], bboxes: [], isAnnotated, isIgnored, imageWidth, imageHeight }
@@ -39,7 +39,6 @@ const stageWrapper = document.getElementById('stage-wrapper');
 const imageCounter = document.getElementById('image-counter');
 const statusIndicator = document.getElementById('status-indicator');
 const filmstrip = document.getElementById('filmstrip');
-const currentSubIndicator = document.getElementById('current-sub-indicator');
 
 const btnPrev = document.getElementById('btn-prev-img');
 const btnNext = document.getElementById('btn-next-img');
@@ -76,7 +75,7 @@ const modalClassesList = document.getElementById('modal-classes-list');
 window.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   renderClassChips();
-  // DO NOT fetch any default subreddit! Let the user search for themselves.
+  // DO NOT pre-fetch anything! Start in clean standby state as requested.
   inputSubreddit.focus();
 });
 
@@ -107,7 +106,7 @@ function setupEventListeners() {
   btnSaveNext.addEventListener('click', () => saveAndNext());
   if (btnIgnore) btnIgnore.addEventListener('click', () => ignoreAndNext());
 
-  // Keyboard navigation
+  // Keyboard navigation: UP/DOWN for vertical gallery, LEFT/RIGHT for images, ENTER for save, X for ignore
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
       if (e.target === tagInput && e.key === 'Enter') {
@@ -118,7 +117,13 @@ function setupEventListeners() {
       return;
     }
 
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      navigateImage(-1);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      navigateImage(1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
       navigateImage(-1);
     } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
       navigateImage(1);
@@ -128,6 +133,13 @@ function setupEventListeners() {
       ignoreAndNext();
     }
   });
+
+  // Mouse wheel over filmstrip scrolls vertical strip
+  if (filmstrip) {
+    filmstrip.addEventListener('wheel', (e) => {
+      e.stopPropagation();
+    }, { passive: true });
+  }
 
   // Tag Input
   tagInput.addEventListener('keydown', (e) => {
@@ -149,13 +161,27 @@ function setupEventListeners() {
     }
   });
 
-  // Canvas drawing
-  setupBboxCanvas();
+  newClassInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnAddClass.click();
+    }
+  });
+
+  // Annotation text changes
+  annotationCaption.addEventListener('input', () => {
+    const annot = state.annotations[state.currentIndex];
+    if (annot) {
+      annot.caption = annotationCaption.value;
+      inheritedPill.style.display = 'none';
+    }
+  });
 
   // Export Modal
   btnOpenExport.addEventListener('click', openExportModal);
   btnCloseModal.addEventListener('click', () => exportModal.classList.remove('open'));
   btnCancelExport.addEventListener('click', () => exportModal.classList.remove('open'));
+  btnConfirmDownload.addEventListener('click', downloadDatasetZip);
 
   document.querySelectorAll('.format-swiss-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -165,13 +191,13 @@ function setupEventListeners() {
     });
   });
 
-  btnConfirmDownload.addEventListener('click', downloadDatasetZip);
+  setupBboxCanvas();
 }
 
-// Fetch Subreddit(s) with multi-query support
+// Fetch Subreddits (supports single or multiple comma/space/plus-separated queries)
 async function fetchSubreddits(query) {
   if (!query) {
-    alert('Please enter one or more subreddits (e.g. "cats" or "cats, EarthPorn").');
+    alert('Please enter one or more subreddits (e.g. IndianInstaBaddies, Naughty_Navels).');
     return;
   }
 
@@ -194,10 +220,6 @@ async function fetchSubreddits(query) {
     state.currentIndex = 0;
     state.annotations = {};
     state.lastAnnotation = null;
-
-    if (currentSubIndicator) {
-      currentSubIndicator.textContent = state.subreddits.map(s => `r/${s}`).join(' + ');
-    }
 
     renderFilmstrip();
     loadImage(0);
@@ -225,11 +247,11 @@ function loadImage(index) {
   imagePlaceholder.style.display = 'none';
   activeImage.style.display = 'block';
 
-  // Highlight filmstrip item
-  document.querySelectorAll('.thumb-cell').forEach((el, idx) => {
+  // Highlight filmstrip item and scroll into view
+  document.querySelectorAll('.vertical-gallery-strip .thumb-cell').forEach((el, idx) => {
     el.classList.toggle('active', idx === index);
   });
-  const activeThumb = document.querySelector(`.thumb-cell[data-index="${index}"]`);
+  const activeThumb = document.querySelector(`.vertical-gallery-strip .thumb-cell[data-index="${index}"]`);
   if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // Update Counters & Titles
@@ -272,30 +294,42 @@ function loadImage(index) {
       inheritedPill.style.display = 'none';
     }
 
-    renderAnnotationForm();
+    renderCurrentForm();
     redrawCanvas();
     updateStatusBadge();
   };
 
   activeImage.onerror = () => {
-    console.warn('Image load error for', item.originalUrl);
+    console.error('Failed to load image:', item.proxyUrl);
+    // Mark as skipped or broken placeholder
+    activeImage.style.display = 'none';
+    imagePlaceholder.style.display = 'block';
+    imagePlaceholder.innerHTML = `
+      <p style="color: #ff3300; font-family: 'Space Mono', monospace; font-weight: bold;">[ IMAGE LOAD ERROR ]</p>
+      <p style="font-size: 0.8rem; margin-top: 6px;">Hotlink blocked or media deleted on Reddit.</p>
+    `;
   };
 }
 
 function generateDefaultCaption(title) {
   if (!title) return '';
-  return title.replace(/\[.*?\]|\(.*?\)/g, '').trim();
+  // Clean up reddit-isms like [OC], (f), resolution tags, etc.
+  return title
+    .replace(/\[\s*oc\s*\]/gi, '')
+    .replace(/\(\s*oc\s*\)/gi, '')
+    .replace(/\[\d+\s*x\s*\d+\]/gi, '')
+    .replace(/\(\d+\s*x\s*\d+\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-// Annotation Form Rendering
-function renderAnnotationForm() {
+function renderCurrentForm() {
   const annot = state.annotations[state.currentIndex] || { caption: '', tags: [], bboxes: [] };
   annotationCaption.value = annot.caption || '';
   renderTags();
   renderBboxList();
 }
 
-// Tags Management
 function renderTags() {
   const annot = state.annotations[state.currentIndex] || { tags: [] };
   const existingBadges = tagsContainer.querySelectorAll('.swiss-tag');
@@ -403,52 +437,60 @@ function setupBboxCanvas() {
   bboxCanvas.addEventListener('mousemove', (e) => {
     if (!state.isDrawing) return;
     const rect = bboxCanvas.getBoundingClientRect();
-    const curX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const curY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    const currentX = (e.clientX - rect.left) / rect.width;
+    const currentY = (e.clientY - rect.top) / rect.height;
 
-    const x = Math.min(state.drawStart.x, curX);
-    const y = Math.min(state.drawStart.y, curY);
-    const width = Math.abs(curX - state.drawStart.x);
-    const height = Math.abs(curY - state.drawStart.y);
+    const startX = state.drawStart.x;
+    const startY = state.drawStart.y;
 
-    state.currentBox = { x, y, width, height, label: state.activeClass };
+    const x = Math.min(startX, currentX);
+    const y = Math.min(startY, currentY);
+    const width = Math.abs(currentX - startX);
+    const height = Math.abs(currentY - startY);
+
+    state.currentBox = {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      width: Math.min(1 - x, width),
+      height: Math.min(1 - y, height),
+      label: state.activeClass
+    };
+
     redrawCanvas();
   });
 
-  bboxCanvas.addEventListener('mouseup', () => {
+  window.addEventListener('mouseup', () => {
     if (!state.isDrawing) return;
     state.isDrawing = false;
 
     if (state.currentBox && state.currentBox.width > 0.02 && state.currentBox.height > 0.02) {
       const annot = state.annotations[state.currentIndex];
-      if (!annot.bboxes) annot.bboxes = [];
-      annot.bboxes.push(state.currentBox);
-      renderBboxList();
+      if (annot) {
+        if (!annot.bboxes) annot.bboxes = [];
+        annot.bboxes.push(state.currentBox);
+        renderBboxList();
+      }
     }
+
     state.currentBox = null;
     redrawCanvas();
   });
 }
 
 function resizeCanvasToImage() {
-  const wrapper = document.getElementById('stage-wrapper');
-  const w = wrapper ? wrapper.clientWidth : activeImage.clientWidth;
-  const h = wrapper ? wrapper.clientHeight : activeImage.clientHeight;
-  if (w && h) {
-    bboxCanvas.width = w;
-    bboxCanvas.height = h;
-    bboxCanvas.style.width = `${w}px`;
-    bboxCanvas.style.height = `${h}px`;
-    redrawCanvas();
-  }
+  if (!activeImage || !activeImage.src) return;
+  const rect = stageWrapper.getBoundingClientRect();
+  bboxCanvas.width = rect.width;
+  bboxCanvas.height = rect.height;
+  redrawCanvas();
 }
 
 function redrawCanvas() {
-  ctx.clearRect(0, 0, bboxCanvas.width, bboxCanvas.height);
-  const annot = state.annotations[state.currentIndex];
   const w = bboxCanvas.width;
   const h = bboxCanvas.height;
+  ctx.clearRect(0, 0, w, h);
 
+  const annot = state.annotations[state.currentIndex];
   if (annot && annot.bboxes) {
     annot.bboxes.forEach(box => {
       drawBox(box, w, h, false);
@@ -481,7 +523,7 @@ function drawBox(box, w, h, isLive) {
   ctx.fillText(box.label, bx + 4, by - 5);
 }
 
-// Filmstrip rendering
+// Vertical Gallery Filmstrip rendering
 function renderFilmstrip() {
   filmstrip.innerHTML = '';
   state.images.forEach((item, idx) => {
@@ -563,7 +605,7 @@ function updateStatusBadge() {
     stageContainer.classList.toggle('image-ignored', !!isIgnored);
   }
 
-  const thumb = document.querySelector(`.thumb-cell[data-index="${state.currentIndex}"]`);
+  const thumb = document.querySelector(`.vertical-gallery-strip .thumb-cell[data-index="${state.currentIndex}"]`);
   if (thumb) {
     thumb.classList.toggle('is-annotated', !!isAnnot);
     thumb.classList.toggle('is-ignored', !!isIgnored);
@@ -577,7 +619,7 @@ function updateProgress() {
   const count = Object.values(state.annotations).filter(a => a.isAnnotated && !a.isIgnored).length;
   const pct = Math.round((count / total) * 100);
 
-  headerProgressCount.textContent = `${count} / ${total} ANNOTATED`;
+  headerProgressCount.textContent = `${count}/${total} ANNOTATED`;
   footerProgressPct.textContent = `${pct}%`;
 
   btnOpenExport.disabled = count === 0;

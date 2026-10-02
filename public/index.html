@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GRIDS / VISION DATASET TRAINER</title>
+  <title>REDDIZ / REDDIT VISION DATASET ANNOTATOR</title>
   
-  <!-- Typography: Strichpunkt Sans (Requested) + Space Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Strichpunkt+Sans:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
@@ -16,127 +15,132 @@
 </head>
 <body>
 
-  <!-- Top Editorial Header inspired by Reference Image -->
-  <header class="swiss-header">
-    <div class="swiss-header-top">
-      <div class="brand-col-giant">
-        <h1>GRIDS</h1>
-        <span class="index-super">/ VISION DATASET ANNOTATOR</span>
+  <!-- Top Header matching user screenshot exactly -->
+  <header class="reddiz-header">
+    <div class="reddiz-header-top">
+      <div class="brand-block">
+        <h1 class="brand-title">REDDIZ</h1>
+        <span class="brand-subtitle">/ REDDIT VISION DATASET ANNOTATOR</span>
       </div>
 
-      <div class="header-meta-table">
-        <div class="meta-index-cell">
-          <span class="index-num">16</span>
-          <span class="index-val" id="header-progress-count">0 / 0 ANNOTATED</span>
+      <div class="header-status-cells">
+        <div class="status-cell">
+          <span class="status-label">Progress</span>
+          <span class="status-val" id="header-progress-count">0/0 ANNOTATED</span>
         </div>
-        <div class="meta-index-cell">
-          <span class="index-num">17</span>
-          <span class="index-val" id="current-sub-indicator">STANDBY</span>
+        <div class="warning-cell">
+          <div class="warning-text">
+            <strong>Warning:</strong> NSFW content are fetched along with non-nsfw content. Discretion is strictly advised.
+          </div>
         </div>
-        <div class="meta-index-cell" style="padding: 10px 16px;">
-          <button id="btn-open-export" class="swiss-btn" style="height: 100%; padding: 0 18px;" disabled>
-            Done &amp; Download ZIP
+        <div class="download-cell">
+          <button id="btn-open-export" class="reddiz-btn-black" disabled>
+            DONE &amp; DOWNLOAD ZIP
           </button>
         </div>
-        <div class="giant-season-stamp">
-          S03
+        <div class="author-cell">
+          &copy; &lt; nissshh / &gt;
         </div>
       </div>
     </div>
 
-    <!-- Query Sub-bar: Supports Multi-Subreddit search (e.g. cats, dogs, EarthPorn) -->
-    <div class="swiss-query-row">
-      <div class="query-col-idx">01 // SUBS</div>
-      <div class="query-col-input">
-        <span class="prefix">r/</span>
-        <input type="text" id="input-subreddit" class="query-input-field" placeholder="Enter subreddit(s) separated by comma or space: e.g. cats, EarthPorn, streetphotography" value="">
+    <!-- Sub-bar: Search Input -->
+    <div class="reddiz-query-bar">
+      <div class="query-idx">01 // SUBS</div>
+      <div class="query-input-wrapper">
+        <span class="sub-prefix">r/</span>
+        <input type="text" id="input-subreddit" class="query-input" placeholder="Enter subreddit(s) separated by comma or space: e.g. cats, EarthPorn, streetphotography" autocomplete="off">
       </div>
-      <div class="query-col-select">
-        <select id="select-sort" class="swiss-select">
-          <option value="hot">HOT</option>
-          <option value="new">NEW</option>
-          <option value="top">TOP</option>
+      <div class="query-sort-wrapper">
+        <select id="select-sort" class="query-sort-select">
+          <option value="new">NEW &or;</option>
+          <option value="hot">HOT &or;</option>
+          <option value="top">TOP &or;</option>
         </select>
       </div>
-      <div class="query-col-btn">
-        <button id="btn-fetch" class="swiss-btn">
-          <span id="fetch-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+      <div class="query-btn-wrapper">
+        <button id="btn-fetch" class="fetch-btn">
+          <span id="fetch-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="fetch-icon">FETCH MEDIA</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Viewport Layout: 3 Columns (Vertical Carousel | 9:16 Canvas Stage | Side Annotation Panel) -->
-  <main class="swiss-main-layout">
-    <!-- Column 1: Vertical Carousel Strip -->
-    <nav class="filmstrip-vertical-strip" id="filmstrip" title="Vertical Image Strip">
+  <!-- Main Viewport Layout: Vertical Carousel Gallery | 9:16 Canvas Stage | Data Entries Side Panel -->
+  <main class="reddiz-main-layout">
+    <!-- Left Column: Vertical Image Gallery -->
+    <nav class="vertical-gallery-strip" id="filmstrip" title="Vertical Image Gallery (Use Up/Down Arrow keys to scroll &amp; navigate)">
       <!-- Rendered dynamically -->
     </nav>
 
-    <!-- Column 2: 9:16 Cropped Canvas Stage -->
+    <!-- Center Column: 9:16 Center Cropped Stage -->
     <section class="stage-section">
       <div class="canvas-viewport-box" id="stage-container">
         
+        <!-- Index Counter Badge -->
         <div class="canvas-index-stamp">
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
-          <span style="margin-left: 6px; color: var(--swiss-text-dim); font-size: 0.7rem;">[9:16 CROP]</span>
+          <span class="crop-tag">[9:16 CROP]</span>
         </div>
 
-        <button class="swiss-nav-arrow prev" id="btn-prev-img" title="Previous (A or Left Arrow)">
-          <span class="material-symbols-rounded">arrow_back</span>
+        <!-- Left Nav Arrow -->
+        <button class="stage-nav-arrow prev" id="btn-prev-img" title="Previous Image (Up Arrow / Left Arrow / A)">
+          &larr;
         </button>
 
+        <!-- 9:16 Center-Cropped Viewport Box -->
         <div class="stage-wrapper aspect-9-16" id="stage-wrapper">
           <img id="active-image" src="" alt="Active Canvas Image" style="display: none;">
           <canvas id="bbox-canvas"></canvas>
           
-          <div id="image-placeholder" style="text-align: center; color: var(--swiss-text-dim); padding: 80px 20px;">
-            <p style="font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--swiss-black);">[ STANDBY ]</p>
-            <p style="font-size: 0.85rem; margin-top: 10px; color: var(--swiss-text-muted);">Enter subreddit(s) above (e.g. <code>IndianInstaBaddies, Naughty_Navels</code>) and press Enter.</p>
+          <div id="image-placeholder" class="standby-box">
+            <p class="standby-title">[ STANDBY ]</p>
+            <p class="standby-desc">Enter subreddit(s) above (e.g. <code>IndianInstaBaddies, Naughty_Navels</code>) and press Enter.</p>
           </div>
         </div>
 
-        <button class="swiss-nav-arrow next" id="btn-next-img" title="Next (D or Right Arrow)">
-          <span class="material-symbols-rounded">arrow_forward</span>
+        <!-- Right Nav Arrow -->
+        <button class="stage-nav-arrow next" id="btn-next-img" title="Next Image (Down Arrow / Right Arrow / D)">
+          &rarr;
         </button>
       </div>
     </section>
 
-    <!-- Column 3: Fixed Right Editorial Side Panel -->
+    <!-- Right Column: Data Entries Side Panel -->
     <aside class="editorial-side-panel">
-      <!-- Row 16: Post Title -->
+      <!-- Row a: Post Title -->
       <div class="editorial-row">
-        <div class="row-index-num">16</div>
+        <div class="row-index-letter">a )</div>
         <div class="row-content-block">
           <div class="row-title-label">
-            <span>POST CONTEXT</span>
+            <span>POST TITLE</span>
             <span class="inherited-stamp" id="inherited-pill" style="display: none;">INHERITED</span>
           </div>
-          <div id="reddit-post-title" style="font-size: 0.88rem; font-weight: 600; line-height: 1.35; color: var(--swiss-text-muted);">No image selected</div>
+          <div id="reddit-post-title" class="post-title-text">No image selected</div>
         </div>
       </div>
 
-      <!-- Row 17: Caption / Prompt -->
+      <!-- Row b: Image Caption & Prompt -->
       <div class="editorial-row">
-        <div class="row-index-num">17</div>
+        <div class="row-index-letter">b )</div>
         <div class="row-content-block">
           <div class="row-title-label">
             <span>IMAGE CAPTION &amp; PROMPT</span>
-            <span style="color: var(--swiss-text-dim);">SD / LoRA / VLM</span>
+            <span class="sub-dim">SD / LoRA / VLM</span>
           </div>
           <textarea id="annotation-caption" class="ruled-textarea" placeholder="Descriptive caption propagated automatically across images..."></textarea>
         </div>
       </div>
 
-      <!-- Row 18: Tags & Keywords -->
+      <!-- Row c: Tags & Tokens -->
       <div class="editorial-row">
-        <div class="row-index-num">18</div>
+        <div class="row-index-letter">c )</div>
         <div class="row-content-block">
           <div class="row-title-label">
             <span>TAGS &amp; TOKENS</span>
-            <span style="color: var(--swiss-text-dim);">[ENTER] TO ADD</span>
+            <span class="sub-dim">[ENTER] TO ADD</span>
           </div>
           <div class="tags-cell-container" id="tags-container">
             <input type="text" id="tag-input" class="tag-field-raw" placeholder="+ Add token...">
@@ -144,22 +148,22 @@
         </div>
       </div>
 
-      <!-- Row 19: Classes & Bounding Boxes -->
+      <!-- Row d: Object Bounding Boxes -->
       <div class="editorial-row" style="flex: 1;">
-        <div class="row-index-num">19</div>
-        <div class="row-content-block" style="gap: 10px;">
+        <div class="row-index-letter">d )</div>
+        <div class="row-content-block" style="gap: 8px;">
           <div class="row-title-label">
             <span>OBJECT BOUNDING BOXES</span>
-            <span style="color: var(--swiss-text-dim);">DRAG ON CANVAS</span>
+            <span class="sub-dim">DRAG ON CANVAS</span>
           </div>
 
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="class-chips">
-            <!-- Dynamic chips -->
+          <div class="class-chips-wrapper" id="class-chips">
+            <!-- Dynamic class chips -->
           </div>
 
-          <div style="display: flex; gap: 6px; margin-top: 4px;">
-            <input type="text" id="new-class-input" class="tag-field-raw" style="border: 1px solid var(--swiss-black); padding: 4px 8px; flex: 1;" placeholder="New class...">
-            <button id="btn-add-class" class="swiss-btn swiss-btn-outline" style="padding: 4px 12px; font-size: 0.75rem;">+ Add Class</button>
+          <div class="new-class-row">
+            <input type="text" id="new-class-input" class="new-class-input" placeholder="New class...">
+            <button id="btn-add-class" class="btn-add-class">+ ADD CLASS</button>
           </div>
 
           <div class="bbox-ruled-list" id="bbox-list">
@@ -168,45 +172,46 @@
         </div>
       </div>
 
-      <!-- Solid Black Dividing Bar from Reference -->
+      <!-- Ruled Dividing Bar -->
       <div class="thick-ruled-bar"></div>
 
-      <!-- Row 00: Trailer / Status & Navigation Footer -->
-      <div class="editorial-row" style="border-bottom: none;">
-        <div class="row-index-num">00</div>
-        <div class="row-content-block" style="padding: 10px 18px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-family: 'Space Mono', monospace; font-size: 0.8rem;">
+      <!-- Row 00: Dataset Completion -->
+      <div class="editorial-row row-completion">
+        <div class="row-index-letter">00</div>
+        <div class="row-content-block" style="padding: 10px 16px;">
+          <div class="completion-bar-inner">
             <span>DATASET COMPLETION</span>
             <strong id="footer-progress-pct">0%</strong>
           </div>
         </div>
       </div>
 
+      <!-- Action Buttons Footer -->
       <div class="editorial-footer-bar">
-        <button id="btn-back" class="swiss-btn swiss-btn-outline" title="Previous Image (A or Left Arrow)">
-          &larr; PREV
+        <button id="btn-back" class="footer-btn btn-prev" title="Previous Image (Up Arrow / Left Arrow)">
+          &mdash; PREV
         </button>
-        <button id="btn-ignore-img" class="swiss-btn swiss-btn-outline" style="background: #fff; color: #d32f2f; border-color: #d32f2f;" title="Ignore &amp; exclude image from training dataset (X or Delete)">
-          <span class="material-symbols-rounded" style="font-size: 16px;">block</span>
+        <button id="btn-ignore-img" class="footer-btn btn-ignore" title="Ignore image from training dataset (X or Delete)">
+          <span class="material-symbols-rounded" style="font-size: 15px;">block</span>
           IGNORE
         </button>
-        <button id="btn-save-next" class="swiss-btn" title="Save &amp; Next (Enter or Right Arrow)">
+        <button id="btn-save-next" class="footer-btn btn-save" title="Save &amp; Next (Down Arrow / Enter)">
           SAVE &amp; NEXT &rarr;
         </button>
       </div>
     </aside>
   </main>
 
-  <!-- Export Dataset Modal in Swiss Style -->
+  <!-- Export Dataset Modal -->
   <div class="swiss-modal-scrim" id="export-modal">
     <div class="swiss-modal-dialog">
       <div class="modal-title-bar">
         <h2>EXPORT DATASET ARCHIVE</h2>
-        <button id="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; font-weight: bold; cursor: pointer;">&times;</button>
+        <button id="btn-close-modal" class="modal-close-btn">&times;</button>
       </div>
 
       <div class="modal-body-pad">
-        <p style="font-size: 0.9rem; color: var(--swiss-text-muted);">
+        <p class="modal-subtitle">
           Your complete dataset will be compiled into a standardized ZIP archive ready for training with images, YOLO labels, COCO annotations, captions, and manifest. Ignored images are excluded.
         </p>
 
@@ -229,7 +234,7 @@
           </div>
         </div>
 
-        <div style="border: 1px solid var(--swiss-black); padding: 12px; font-family: 'Space Mono', monospace; font-size: 0.8rem; background: var(--swiss-paper);">
+        <div class="modal-summary-box">
           <div>SUBREDDIT(S): <strong id="modal-sub-name">N/A</strong></div>
           <div style="margin-top: 4px;">TOTAL IMAGES IN DATASET: <strong id="modal-total-images">0</strong></div>
           <div style="margin-top: 4px;">CLASSES: <span id="modal-classes-list">subject, foreground</span></div>
@@ -237,9 +242,9 @@
       </div>
 
       <div class="modal-footer-pad">
-        <button id="btn-cancel-export" class="swiss-btn swiss-btn-outline">CANCEL</button>
-        <button id="btn-confirm-download" class="swiss-btn">
-          <span id="download-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+        <button id="btn-cancel-export" class="footer-btn btn-prev" style="flex: initial; padding: 10px 20px;">CANCEL</button>
+        <button id="btn-confirm-download" class="footer-btn btn-save" style="flex: initial; padding: 10px 24px;">
+          <span id="download-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="download-icon">GENERATE &amp; DOWNLOAD ZIP</span>
         </button>
       </div>
