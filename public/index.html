@@ -128,7 +128,7 @@
         <div class="row-content-block">
           <div class="row-title-label">
             <span>IMAGE CAPTION &amp; PROMPT</span>
-            <span class="sub-dim">SD / LoRA / VLM</span>
+            <span style="display:flex; align-items:center; gap:8px;"><span class="sub-dim">SD / LoRA / VLM</span><button id="btn-clear-caption" type="button" class="btn-micro-clear" title="Clear prompt text">&times; CLEAR</button></span>
           </div>
           <textarea id="annotation-caption" class="ruled-textarea" placeholder="Descriptive caption propagated automatically across images..."></textarea>
         </div>
@@ -154,7 +154,7 @@
         <div class="row-content-block" style="gap: 8px;">
           <div class="row-title-label">
             <span>OBJECT BOUNDING BOXES</span>
-            <span class="sub-dim">DRAG ON CANVAS</span>
+            <span style="display:flex; align-items:center; gap:8px;"><span class="sub-dim">DRAG ON CANVAS</span><button id="btn-clear-bboxes" type="button" class="btn-micro-clear" title="Clear all bounding boxes on this image">&times; CLEAR BOXES</button></span>
           </div>
 
           <div class="class-chips-wrapper" id="class-chips">
@@ -260,3 +260,4 @@
   <script src="/app.js"></script>
 </body>
 </html>
+

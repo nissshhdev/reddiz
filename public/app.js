@@ -48,6 +48,8 @@ const btnSaveNext = document.getElementById('btn-save-next');
 
 const redditPostTitle = document.getElementById('reddit-post-title');
 const annotationCaption = document.getElementById('annotation-caption');
+const btnClearCaption = document.getElementById('btn-clear-caption');
+const btnClearBboxes = document.getElementById('btn-clear-bboxes');
 const tagsContainer = document.getElementById('tags-container');
 const tagInput = document.getElementById('tag-input');
 const classChips = document.getElementById('class-chips');
@@ -169,6 +171,29 @@ function setupEventListeners() {
   });
 
   // Annotation text changes
+  if (btnClearCaption) {
+    btnClearCaption.addEventListener('click', () => {
+      annotationCaption.value = '';
+      const annot = state.annotations[state.currentIndex];
+      if (annot) {
+        annot.caption = '';
+        inheritedPill.style.display = 'none';
+      }
+      annotationCaption.focus();
+    });
+  }
+
+  if (btnClearBboxes) {
+    btnClearBboxes.addEventListener('click', () => {
+      const annot = state.annotations[state.currentIndex];
+      if (annot) {
+        annot.bboxes = [];
+        renderBboxList();
+        redrawCanvas();
+      }
+    });
+  }
+
   annotationCaption.addEventListener('input', () => {
     const annot = state.annotations[state.currentIndex];
     if (annot) {
@@ -271,7 +296,7 @@ function loadImage(index) {
         state.annotations[index] = {
           caption: state.lastAnnotation.caption || generateDefaultCaption(item.title),
           tags: [...state.lastAnnotation.tags],
-          bboxes: state.lastAnnotation.bboxes ? state.lastAnnotation.bboxes.map(b => ({ ...b })) : [],
+          bboxes: [],
           isAnnotated: false,
           isIgnored: false,
           imageWidth: activeImage.naturalWidth,
@@ -709,3 +734,4 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+

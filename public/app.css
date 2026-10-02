@@ -941,3 +941,20 @@ body {
   gap: 10px;
   background: var(--swiss-paper);
 }
+.btn-micro-clear {
+  background: transparent;
+  border: 1px solid #ccc;
+  color: var(--swiss-text-dim);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: bold;
+  padding: 1px 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+}
+.btn-micro-clear:hover {
+  background: var(--swiss-black);
+  border-color: var(--swiss-black);
+  color: var(--swiss-white);
+}
