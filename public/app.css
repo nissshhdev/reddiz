@@ -958,3 +958,22 @@ body {
   border-color: var(--swiss-black);
   color: var(--swiss-white);
 }
+/* Brand Logo & Icon Integration */
+.brand-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon-svg {
+  display: block;
+  flex-shrink: 0;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.brand-icon-svg:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 1);
+}
