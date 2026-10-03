@@ -1005,30 +1005,18 @@ function loadImage(index) {
 
     // Check if this image already has annotations
     if (!state.annotations[index]) {
-      // Inherit previous annotation if available
-      if (state.lastAnnotation) {
-        state.annotations[index] = {
-          caption: state.lastAnnotation.caption || generateDefaultCaption(item.title),
-          tags: [...state.lastAnnotation.tags],
-          bboxes: [],
-          isAnnotated: false,
-          isIgnored: false,
-          imageWidth: nw,
-          imageHeight: nh
-        };
-        inheritedPill.style.display = 'inline-block';
-      } else {
-        state.annotations[index] = {
-          caption: generateDefaultCaption(item.title),
-          tags: [item.subreddit ? item.subreddit.toLowerCase() : 'photo'],
-          bboxes: [],
-          isAnnotated: false,
-          isIgnored: false,
-          imageWidth: nw,
-          imageHeight: nh
-        };
-        inheritedPill.style.display = 'none';
-      }
+      state.annotations[index] = {
+        caption: '',
+        tags: (state.lastAnnotation && state.lastAnnotation.tags && state.lastAnnotation.tags.length > 0)
+          ? [...state.lastAnnotation.tags]
+          : [item.subreddit ? item.subreddit.toLowerCase() : 'photo'],
+        bboxes: [],
+        isAnnotated: false,
+        isIgnored: false,
+        imageWidth: nw,
+        imageHeight: nh
+      };
+      inheritedPill.style.display = 'none';
     } else {
       inheritedPill.style.display = 'none';
     }
