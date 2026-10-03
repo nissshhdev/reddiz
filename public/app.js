@@ -1621,9 +1621,13 @@ async function generateAiPrompt(apiKey, model, provider) {
   const savedWidth = localStorage.getItem('reddiz_panel_width');
   if (savedWidth) {
     const w = parseInt(savedWidth, 10);
-    if (w >= 360 && w <= 850) {
+    if (w >= 220 && w <= 450) {
       panel.style.width = w + 'px';
+    } else {
+      panel.style.width = '280px';
     }
+  } else {
+    panel.style.width = '280px';
   }
 
   let isDragging = false;
@@ -1644,8 +1648,8 @@ async function generateAiPrompt(apiKey, model, provider) {
     if (!isDragging) return;
     const delta = startX - e.clientX;
     let newWidth = startWidth + delta;
-    if (newWidth < 360) newWidth = 360;
-    if (newWidth > 850) newWidth = 850;
+    if (newWidth < 220) newWidth = 220;
+    if (newWidth > 650) newWidth = 650;
     panel.style.width = newWidth + 'px';
   });
 
@@ -1659,10 +1663,10 @@ async function generateAiPrompt(apiKey, model, provider) {
     localStorage.setItem('reddiz_panel_width', finalWidth);
   });
 
-  // Double click resizer to reset to default 520px
+  // Double click resizer to reset to compact default 280px
   resizer.addEventListener('dblclick', () => {
-    panel.style.width = '520px';
-    localStorage.setItem('reddiz_panel_width', 520);
+    panel.style.width = '280px';
+    localStorage.setItem('reddiz_panel_width', 280);
   });
 })();
 
@@ -2245,6 +2249,37 @@ window.addEventListener('DOMContentLoaded', () => {
     vaultModal.addEventListener('click', (e) => {
       if (e.target === vaultModal) closeBackupVaultModal();
     });
+  }
+
+  // Sync Fetch & Upload Button widths with Buy Me a Coffee & Author cells
+  function syncFetchButtonWidth() {
+    const bmacCell = document.querySelector('.bmac-cell') || document.querySelector('.btn-bmac');
+    const fetchBtn = document.getElementById('btn-fetch');
+    if (bmacCell && fetchBtn) {
+      const w = Math.round(bmacCell.getBoundingClientRect().width);
+      if (w > 0) {
+        document.documentElement.style.setProperty('--bmac-width', `${w}px`);
+        fetchBtn.style.width = `${w}px`;
+        fetchBtn.style.minWidth = `${w}px`;
+      }
+    }
+
+    const authorCell = document.querySelector('.author-cell');
+    const uploadBtn = document.getElementById('btn-open-upload');
+    if (authorCell && uploadBtn) {
+      const aw = Math.round(authorCell.getBoundingClientRect().width);
+      if (aw > 0) {
+        uploadBtn.style.width = `${aw}px`;
+        uploadBtn.style.minWidth = `${aw}px`;
+      }
+    }
+  }
+
+  syncFetchButtonWidth();
+  window.addEventListener('resize', syncFetchButtonWidth);
+  window.addEventListener('load', syncFetchButtonWidth);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(syncFetchButtonWidth);
   }
 });
 
