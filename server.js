@@ -207,9 +207,21 @@ function parseRssImages(xml, subreddit) {
 }
 
 function downloadImageBuffer(imageUrl) {
-  if (imageUrl.startsWith('data:image/')) {
-    const base64Data = imageUrl.split(',')[1];
-    return Promise.resolve(Buffer.from(base64Data, 'base64'));
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return Promise.reject(new Error('Invalid image URL'));
+  }
+  if (imageUrl.startsWith('data:')) {
+    const commaIdx = imageUrl.indexOf(',');
+    if (commaIdx !== -1) {
+      const base64Data = imageUrl.slice(commaIdx + 1);
+      return Promise.resolve(Buffer.from(base64Data, 'base64'));
+    }
+  }
+  if (imageUrl.startsWith('/api/proxy-image?url=')) {
+    const query = imageUrl.split('url=')[1];
+    if (query) {
+      return downloadImageBuffer(decodeURIComponent(query));
+    }
   }
   return new Promise((resolve, reject) => {
     function get(u, redirectsLeft = 3) {
@@ -497,8 +509,8 @@ Provide only the dense, hyper-detailed, pixel-level descriptive prompt without c
             const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
 
             try {
-              let downloadTarget = item.originalUrl;
-              if (downloadTarget.includes('preview.redd.it')) {
+              let downloadTarget = item.originalUrl || item.proxyUrl || '';
+              if (typeof downloadTarget === 'string' && downloadTarget.includes('preview.redd.it')) {
                 downloadTarget = downloadTarget.replace('preview.redd.it', 'i.redd.it').split('?')[0];
               }
               const imgBuffer = await downloadImageBuffer(downloadTarget);

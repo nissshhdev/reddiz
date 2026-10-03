@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>REDDIZ / REDDIT VISION DATASET ANNOTATOR</title>
+  <title>REDDIZ / VISION DATASET ANNOTATOR</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="/app.css">
 </head>
+
 <body>
   <!-- Super Smooth Initial Page Boot Animation -->
   <div class="reddiz-page-boot-curtain" id="page-boot-curtain">
     <div class="boot-logo-container">
-      <svg class="brand-icon-svg" viewBox="0 0 40 40" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="brand-icon-svg" viewBox="0 0 40 40" width="56" height="56" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="2" width="36" height="36" fill="#000000" rx="3" />
         <rect x="7" y="7" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="2" />
-        <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-width="1.6" stroke-dasharray="2.5 1.5" />
+        <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-width="1.6"
+          stroke-dasharray="2.5 1.5" />
         <circle cx="20" cy="20" r="2.2" fill="#ff3300" />
         <path d="M20 14v2M20 24v2M14 20h2M24 20h2" stroke="#ff3300" stroke-width="1.2" stroke-linecap="square" />
       </svg>
@@ -34,14 +42,16 @@
   </div>
 
   <!-- Top Header matching user screenshot exactly -->
-    <header class="reddiz-header">
+  <header class="reddiz-header">
     <div class="reddiz-header-top">
       <div class="brand-block">
         <div class="brand-logo-wrap">
-          <svg class="brand-icon-svg" viewBox="0 0 40 40" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="brand-icon-svg" viewBox="0 0 40 40" width="36" height="36" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="2" width="36" height="36" fill="#000000" rx="3" />
             <rect x="7" y="7" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="2" />
-            <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-width="1.6" stroke-dasharray="2.5 1.5" />
+            <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff"
+              stroke-width="1.6" stroke-dasharray="2.5 1.5" />
             <circle cx="20" cy="20" r="2.2" fill="#ff3300" />
             <path d="M20 14v2M20 24v2M14 20h2M24 20h2" stroke="#ff3300" stroke-width="1.2" stroke-linecap="square" />
           </svg>
@@ -57,30 +67,68 @@
         </div>
         <div class="warning-cell">
           <div class="warning-text">
-            <strong>Warning:</strong> NSFW content are fetched along with non-nsfw content. Discretion is strictly advised.
+            <svg class="warning-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span><strong>Warning:</strong> NSFW content are fetched along with non-nsfw content. Discretion is strictly advised.</span>
           </div>
         </div>
         <div class="settings-cell">
-          <button id="btn-open-ai-settings-top" type="button" class="btn-top-ai-settings" title="Configure AI Vision Models, API Keys & Live Diagnostic Test">
+          <button id="btn-open-ai-settings-top" type="button" class="btn-top-ai-settings"
+            title="Configure AI Vision Models, API Keys & Live Diagnostic Test">
             <span class="settings-gear-icon">&#9881;</span>
             <span>AI SETTINGS</span>
           </button>
         </div>
+        <div class="backup-cell">
+          <button id="btn-save-backup" type="button" class="reddiz-btn-blue"
+            title="Save current session to local backup with timestamp & image count">
+            <svg class="save-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>SAVE</span>
+          </button>
+          <button id="btn-open-load-backup" type="button" class="reddiz-btn-blue-outline"
+            title="View & Load Saved Local Backups">
+            <svg class="load-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              <line x1="12" y1="11" x2="12" y2="17" />
+              <polyline points="9 14 12 11 15 14" />
+            </svg>
+            <span>LOAD</span>
+          </button>
+        </div>
         <div class="download-cell">
-          <button id="btn-open-export" class="reddiz-btn-black" disabled>
-            DONE &amp; DOWNLOAD ZIP
+          <button id="btn-open-export" class="reddiz-btn-blue btn-download" disabled
+            title="Export complete annotated dataset archive">
+            <svg class="download-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>DONE &amp; DOWNLOAD ZIP</span>
           </button>
         </div>
         <div class="bmac-cell">
-          <a href="https://buymeacoffee.com/nissshhdevz" target="_blank" rel="noopener noreferrer" class="btn-bmac" title="Support the developer - Buy me a coffee">
+          <a href="https://buymeacoffee.com/nissshhdevz" target="_blank" rel="noopener noreferrer" class="btn-bmac"
+            title="Support the developer - Buy me a coffee">
             <svg class="bmac-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-              <path d="M20.216 6.415l-.132-.666c-.119-.597-.383-.883-.804-.883h-14.56c-.421 0-.685.286-.804.883l-.132.666C3.652 7.085 3.5 7.973 3.5 8.878c0 3.824 2.822 6.994 6.559 7.427.674 1.144 1.83 1.954 3.203 2.152l-.634 2.215c-.092.321.14.628.474.628h1.796c.334 0 .566-.307.474-.628l-.634-2.215c1.373-.198 2.529-1.008 3.203-2.152 3.737-.433 6.559-3.603 6.559-7.427 0-.905-.152-1.793-.284-2.463zm-2.216 2.463c0 2.757-2.029 5.018-4.636 5.373-.418-.328-.888-.582-1.4-.738.358-.87.56-1.833.56-2.842V7.866h4.863c.404.757.613 1.62.613 2.512z"/>
+              <path
+                d="M20.216 6.415l-.132-.666c-.119-.597-.383-.883-.804-.883h-14.56c-.421 0-.685.286-.804.883l-.132.666C3.652 7.085 3.5 7.973 3.5 8.878c0 3.824 2.822 6.994 6.559 7.427.674 1.144 1.83 1.954 3.203 2.152l-.634 2.215c-.092.321.14.628.474.628h1.796c.334 0 .566-.307.474-.628l-.634-2.215c1.373-.198 2.529-1.008 3.203-2.152 3.737-.433 6.559-3.603 6.559-7.427 0-.905-.152-1.793-.284-2.463zm-2.216 2.463c0 2.757-2.029 5.018-4.636 5.373-.418-.328-.888-.582-1.4-.738.358-.87.56-1.833.56-2.842V7.866h4.863c.404.757.613 1.62.613 2.512z" />
             </svg>
             <span>BUY ME A COFFEE</span>
             <span class="bmac-arrow">&nearr;</span>
           </a>
         </div>
-        <div class="author-cell" id="btn-author-guide" style="cursor:pointer;" title="Click for User Guide & API Key Direct Links">
+        <div class="author-cell" id="btn-author-guide" style="cursor:pointer;"
+          title="Click for User Guide & API Key Direct Links">
           &copy; &lt; nissshh / &gt;
         </div>
       </div>
@@ -91,21 +139,18 @@
       <div class="query-idx">01 // SUBS</div>
       <div class="query-input-wrapper">
         <span class="sub-prefix">r/</span>
-        <input type="text" id="input-subreddit" class="query-input" placeholder="Enter subreddit(s) separated by comma or space: e.g. cats, EarthPorn, streetphotography" autocomplete="off">
-      </div>
-      <div class="query-sort-wrapper">
-        <select id="select-sort" class="query-sort-select">
-          <option value="new">NEW &or;</option>
-          <option value="hot">HOT &or;</option>
-          <option value="top">TOP &or;</option>
-        </select>
+        <input type="text" id="input-subreddit" class="query-input"
+          placeholder="Enter subreddit(s) separated by comma or space: e.g. cats, EarthPorn, streetphotography"
+          autocomplete="off">
       </div>
       <div class="query-btn-wrapper">
         <button id="btn-fetch" class="fetch-btn" title="Fetch images from the entered subreddit(s)">
-          <span id="fetch-spinner" style="display: none; width: 13px; height: 13px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
+          <span id="fetch-spinner"
+            style="display: none; width: 13px; height: 13px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="fetch-icon">FETCH MEDIA</span>
         </button>
-        <button id="btn-open-upload" type="button" class="upload-btn" title="Manually upload images via direct URL or local device files">
+        <button id="btn-open-upload" type="button" class="upload-btn"
+          title="Manually upload images via direct URL or local device files">
           <span>&#8679; UPLOAD MEDIA</span>
         </button>
       </div>
@@ -115,7 +160,8 @@
   <!-- Main Viewport Layout: Vertical Carousel Gallery | 9:16 Canvas Stage | Data Entries Side Panel -->
   <main class="reddiz-main-layout">
     <!-- Left Column: Vertical Image Gallery -->
-    <nav class="vertical-gallery-strip" id="filmstrip" title="Vertical Image Gallery (Use Up/Down Arrow keys to scroll &amp; navigate)">
+    <nav class="vertical-gallery-strip" id="filmstrip"
+      title="Vertical Image Gallery (Use Up/Down Arrow keys to scroll &amp; navigate)">
       <!-- Rendered dynamically -->
     </nav>
 
@@ -135,16 +181,23 @@
                 <line x1="10" y1="90" x2="130" y2="20" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
                 <line x1="5" y1="55" x2="135" y2="55" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
                 <!-- Concentric Web Strands -->
-                <path id="web-ring-1" class="web-strand" d="M70,30 L95,40 L105,55 L95,70 L70,80 L45,70 L35,55 L45,40 Z" stroke="#111" stroke-width="1.5" />
-                <path id="web-ring-2" class="web-strand" d="M70,20 L105,32 L118,55 L105,78 L70,90 L35,78 L22,55 L35,32 Z" stroke="#111" stroke-width="1.6" />
-                <path id="web-ring-3" class="web-strand" d="M70,10 L118,25 L130,55 L118,85 L70,100 L22,85 L10,55 L22,25 Z" stroke="#ff3300" stroke-width="1.8" />
+                <path id="web-ring-1" class="web-strand" d="M70,30 L95,40 L105,55 L95,70 L70,80 L45,70 L35,55 L45,40 Z"
+                  stroke="#111" stroke-width="1.5" />
+                <path id="web-ring-2" class="web-strand"
+                  d="M70,20 L105,32 L118,55 L105,78 L70,90 L35,78 L22,55 L35,32 Z" stroke="#111" stroke-width="1.6" />
+                <path id="web-ring-3" class="web-strand"
+                  d="M70,10 L118,25 L130,55 L118,85 L70,100 L22,85 L10,55 L22,25 Z" stroke="#ff3300"
+                  stroke-width="1.8" />
               </svg>
               <!-- Precision Geometric Spider Silhouette -->
               <div class="spider-sil-wrap">
-                <svg class="spider-svg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="spider-svg" width="34" height="34" viewBox="0 0 34 34" fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
                   <!-- Legs -->
-                  <path d="M12 14 Q6 8 3 13 M10 16 Q3 16 2 21 M10 18 Q4 22 5 28 M12 20 Q7 27 10 32" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-                  <path d="M22 14 Q28 8 31 13 M24 16 Q31 16 32 21 M24 18 Q30 22 29 28 M22 20 Q27 27 24 32" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                  <path d="M12 14 Q6 8 3 13 M10 16 Q3 16 2 21 M10 18 Q4 22 5 28 M12 20 Q7 27 10 32" stroke="#000"
+                    stroke-width="1.5" stroke-linecap="round" fill="none" />
+                  <path d="M22 14 Q28 8 31 13 M24 16 Q31 16 32 21 M24 18 Q30 22 29 28 M22 20 Q27 27 24 32" stroke="#000"
+                    stroke-width="1.5" stroke-linecap="round" fill="none" />
                   <!-- Abdomen (Geometric) -->
                   <ellipse cx="17" cy="20" rx="4.5" ry="6" fill="#000" />
                   <!-- Cephalothorax -->
@@ -167,7 +220,11 @@
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
           <span class="crop-tag">[9:16 CROP]</span>
-          <button id="btn-quick-delete-stage" class="stage-quick-delete-btn" title="Delete current image completely from queue (Shift+Delete)">
+          <button id="btn-quick-download-stage" class="stage-quick-action-btn" title="Download this image directly">
+            <span class="material-symbols-rounded" style="font-size: 14px;">download</span>
+          </button>
+          <button id="btn-quick-delete-stage" class="stage-quick-delete-btn"
+            title="Delete current image completely from queue (Delete / Backspace)">
             <span class="material-symbols-rounded" style="font-size: 14px;">delete</span>
           </button>
         </div>
@@ -190,10 +247,11 @@
           </div>
           <img id="active-image" src="" alt="Active Canvas Image" style="display: none;">
           <canvas id="bbox-canvas"></canvas>
-          
+
           <div id="image-placeholder" class="standby-box">
-            <p class="standby-title">[ STANDBY ]</p>
-            <p class="standby-desc">Enter subreddit(s) above (e.g. <code>IndianInstaBaddies, Naughty_Navels</code>) and press Enter.</p>
+            <p class="standby-title">[ READY FOR INPUT ]</p>
+            <p class="standby-desc">Load image sets using subreddit name(s) above or paste your image from clipboard
+              here (Ctrl+V).</p>
           </div>
         </div>
 
@@ -229,47 +287,55 @@
             <span class="caption-label-text">IMAGE CAPTION &amp; PROMPT</span>
             <div class="caption-ai-action-cluster">
               <select id="inline-model-select" class="inline-model-selector" title="Select active Vision AI Model">
-  <optgroup label="GOOGLE GEMINI (3.X &amp; LIGHTWEIGHT)">
-    <option value="gemini:gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; FAST &#9733;</option>
-    <option value="gemini:gemini-3.5-flash">GEMINI 3.5 FLASH</option>
-    <option value="gemini:gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE (LGT)</option>
-    <option value="gemini:gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE (LGT)</option>
-  </optgroup>
-  <optgroup label="OPENAI (LATEST &amp; MINI)">
-    <option value="openai:gpt-4o">GPT-4O &mdash; LATEST</option>
-    <option value="openai:gpt-4o-mini">GPT-4O MINI &mdash; LIGHTWEIGHT</option>
-  </optgroup>
-  <optgroup label="ANTHROPIC CLAUDE (3.5)">
-    <option value="claude:claude-3-5-sonnet-20241022">CLAUDE 3.5 SONNET &mdash; LATEST</option>
-    <option value="claude:claude-3-5-haiku-20241022">CLAUDE 3.5 HAIKU &mdash; LIGHTWEIGHT</option>
-  </optgroup>
-  <optgroup label="GROQ (LLAMA 3.2 VISION)">
-    <option value="groq:llama-3.2-11b-vision-preview">LLAMA 3.2 11B &mdash; LIGHTWEIGHT</option>
-    <option value="groq:llama-3.2-90b-vision-preview">LLAMA 3.2 90B &mdash; LATEST</option>
-  </optgroup>
-  <optgroup label="HUGGING FACE (LIGHTWEIGHT VISION)">
-    <option value="huggingface:Salesforce/blip-image-captioning-large">BLIP LARGE &mdash; FAST CAPTION</option>
-    <option value="huggingface:nlpconnect/vit-gpt2-image-captioning">VIT-GPT2 &mdash; LIGHTWEIGHT</option>
-    <option value="huggingface:facebook/detr-resnet-50">DETR RESNET-50 &mdash; OBJECTS</option>
-  </optgroup>
-</select>
-              <button id="btn-ai-prompt" type="button" class="btn-ai-generate" title="Run multimodal prompt with selected model">
-                <span id="ai-spinner" style="display:none; width:9px; height:9px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:4px;"></span>
+                <optgroup label="GOOGLE GEMINI (3.X &amp; LIGHTWEIGHT)">
+                  <option value="gemini:gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; FAST &#9733;</option>
+                  <option value="gemini:gemini-3.5-flash">GEMINI 3.5 FLASH</option>
+                  <option value="gemini:gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE (LGT)</option>
+                  <option value="gemini:gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE (LGT)</option>
+                </optgroup>
+                <optgroup label="OPENAI (LATEST &amp; MINI)">
+                  <option value="openai:gpt-4o">GPT-4O &mdash; LATEST</option>
+                  <option value="openai:gpt-4o-mini">GPT-4O MINI &mdash; LIGHTWEIGHT</option>
+                </optgroup>
+                <optgroup label="ANTHROPIC CLAUDE (3.5)">
+                  <option value="claude:claude-3-5-sonnet-20241022">CLAUDE 3.5 SONNET &mdash; LATEST</option>
+                  <option value="claude:claude-3-5-haiku-20241022">CLAUDE 3.5 HAIKU &mdash; LIGHTWEIGHT</option>
+                </optgroup>
+                <optgroup label="GROQ (LLAMA 3.2 VISION)">
+                  <option value="groq:llama-3.2-11b-vision-preview">LLAMA 3.2 11B &mdash; LIGHTWEIGHT</option>
+                  <option value="groq:llama-3.2-90b-vision-preview">LLAMA 3.2 90B &mdash; LATEST</option>
+                </optgroup>
+                <optgroup label="HUGGING FACE (LIGHTWEIGHT VISION)">
+                  <option value="huggingface:Salesforce/blip-image-captioning-large">BLIP LARGE &mdash; FAST CAPTION
+                  </option>
+                  <option value="huggingface:nlpconnect/vit-gpt2-image-captioning">VIT-GPT2 &mdash; LIGHTWEIGHT</option>
+                  <option value="huggingface:facebook/detr-resnet-50">DETR RESNET-50 &mdash; OBJECTS</option>
+                </optgroup>
+              </select>
+              <button id="btn-ai-prompt" type="button" class="btn-ai-generate"
+                title="Run multimodal prompt with selected model">
+                <span id="ai-spinner"
+                  style="display:none; width:9px; height:9px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:4px;"></span>
                 <span id="ai-btn-label">&#10022; PROMPT</span>
               </button>
-              <button id="btn-ai-stop" type="button" class="btn-ai-stop" style="display:none;" title="Stop active AI analysis">
+              <button id="btn-ai-stop" type="button" class="btn-ai-stop" style="display:none;"
+                title="Stop active AI analysis">
                 <span>&#9632; STOP</span>
               </button>
-              <button id="btn-ai-compare" type="button" class="btn-ai-generate" title="Run multiple AI vision models concurrently and pick the best caption">
+              <button id="btn-ai-compare" type="button" class="btn-ai-generate"
+                title="Run multiple AI vision models concurrently and pick the best caption">
                 <span>&#8652; COMPARE</span>
               </button>
-              <button id="btn-ai-settings-panel" type="button" class="btn-ai-settings-icon" title="Vision API Keys &amp; Model Configuration">
+              <button id="btn-ai-settings-panel" type="button" class="btn-ai-settings-icon"
+                title="Vision API Keys &amp; Model Configuration">
                 <span>&#9881;</span>
               </button>
-              <button id="btn-clear-caption" type="button" class="btn-micro-clear-cluster" title="Clear prompt text">&times;</button>
+              <button id="btn-clear-caption" type="button" class="btn-micro-clear-cluster"
+                title="Clear prompt text">&times;</button>
             </div>
           </div>
-          <textarea id="annotation-caption" class="ruled-textarea" placeholder="Descriptive caption propagated automatically across images..."></textarea>
+          <textarea id="annotation-caption" class="ruled-textarea"
+            placeholder="Descriptive caption propagated automatically across images..."></textarea>
         </div>
       </div>
 
@@ -293,7 +359,9 @@
         <div class="row-content-block" style="gap: 8px;">
           <div class="row-title-label">
             <span>OBJECT BOUNDING BOXES</span>
-            <span style="display:flex; align-items:center; gap:8px;"><span class="sub-dim">DRAG ON CANVAS</span><button id="btn-clear-bboxes" type="button" class="btn-micro-clear" title="Clear all bounding boxes on this image">&times; CLEAR BOXES</button></span>
+            <span style="display:flex; align-items:center; gap:8px;"><span class="sub-dim">DRAG ON CANVAS</span><button
+                id="btn-clear-bboxes" type="button" class="btn-micro-clear"
+                title="Clear all bounding boxes on this image">&times; CLEAR BOXES</button></span>
           </div>
 
           <div class="class-chips-wrapper" id="class-chips">
@@ -334,7 +402,8 @@
           <span class="material-symbols-rounded" style="font-size: 15px;">block</span>
           IGNORE
         </button>
-        <button id="btn-delete-img" class="footer-btn btn-delete" title="Delete image completely from queue (Shift+Delete / Shift+Backspace)">
+        <button id="btn-delete-img" class="footer-btn btn-delete"
+          title="Delete image completely from queue (Shift+Delete / Shift+Backspace)">
           <span class="material-symbols-rounded" style="font-size: 15px;">delete</span>
           DELETE
         </button>
@@ -346,7 +415,7 @@
   </main>
 
   <!-- Export Dataset Modal -->
-    <!-- MANUAL IMAGE UPLOAD MODAL -->
+  <!-- MANUAL IMAGE UPLOAD MODAL -->
   <div class="swiss-modal-scrim" id="upload-modal" style="z-index: 1070;">
     <div class="swiss-modal-dialog upload-modal-dialog">
       <!-- Title Bar -->
@@ -371,7 +440,8 @@
       <!-- Modal Body (Spacious & Scrollable) -->
       <div class="upload-modal-body">
         <p class="upload-modal-lead">
-          Import individual images or batches directly into your active annotation session for dataset labeling and multimodal AI prompt analysis.
+          Import individual images or batches directly into your active annotation session for dataset labeling and
+          multimodal AI prompt analysis.
         </p>
 
         <!-- Section: Local Device File Upload -->
@@ -400,7 +470,9 @@
           <div class="upload-url-card">
             <label class="upload-field-label">DIRECT IMAGE ADDRESS</label>
             <div class="upload-url-input-row">
-              <input type="url" id="input-upload-url" placeholder="https://i.redd.it/example.jpg or https://images.unsplash.com/..." class="upload-swiss-input">
+              <input type="url" id="input-upload-url"
+                placeholder="https://i.redd.it/example.jpg or https://images.unsplash.com/..."
+                class="upload-swiss-input">
               <button type="button" id="btn-add-url-preview" class="upload-btn-load">
                 <span>+ ADD TO QUEUE</span>
               </button>
@@ -428,11 +500,13 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="modal-footer-pad" style="border-top: 2px solid var(--swiss-black); background: #fbfbf9; padding: 14px 24px;">
+      <div class="modal-footer-pad"
+        style="border-top: 2px solid var(--swiss-black); background: #fbfbf9; padding: 14px 24px;">
         <span class="ai-footer-note">&#128274; RETAINED IN ACTIVE SESSION ONLY</span>
         <div style="display: flex; gap: 10px;">
           <button id="btn-cancel-upload" type="button" class="btn-ai-modal-cancel">CANCEL</button>
-          <button id="btn-commit-upload" type="button" class="btn-ai-modal-save" style="background: var(--swiss-black);" disabled>+ COMMIT TO SESSION</button>
+          <button id="btn-commit-upload" type="button" class="btn-ai-modal-save" style="background: var(--swiss-black);"
+            disabled>+ COMMIT TO SESSION</button>
         </div>
       </div>
     </div>
@@ -446,7 +520,8 @@
 
       <div class="modal-body-pad">
         <p class="modal-subtitle">
-          Your complete dataset will be compiled into a standardized ZIP archive ready for training with images, YOLO labels, COCO annotations, captions, and manifest. Ignored images are excluded.
+          Your complete dataset will be compiled into a standardized ZIP archive ready for training with images, YOLO
+          labels, COCO annotations, captions, and manifest. Ignored images are excluded.
         </p>
 
         <div class="format-grid-swiss">
@@ -476,9 +551,11 @@
       </div>
 
       <div class="modal-footer-pad">
-        <button id="btn-cancel-export" class="footer-btn btn-prev" style="flex: initial; padding: 10px 20px;">CANCEL</button>
+        <button id="btn-cancel-export" class="footer-btn btn-prev"
+          style="flex: initial; padding: 10px 20px;">CANCEL</button>
         <button id="btn-confirm-download" class="footer-btn btn-save" style="flex: initial; padding: 10px 24px;">
-          <span id="download-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
+          <span id="download-spinner"
+            style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="download-icon">GENERATE &amp; DOWNLOAD ZIP</span>
         </button>
       </div>
@@ -487,7 +564,9 @@
 
   <style>
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 
@@ -497,7 +576,8 @@
       <!-- Title Bar -->
       <div class="modal-title-bar">
         <div style="display:flex;align-items:center;gap:10px;">
-          <span style="display:inline-block;width:10px;height:10px;background:#ff3300;box-shadow:0 0 8px #ff3300;flex-shrink:0;"></span>
+          <span
+            style="display:inline-block;width:10px;height:10px;background:#ff3300;box-shadow:0 0 8px #ff3300;flex-shrink:0;"></span>
           <h2 id="ai-modal-heading">&#9881; AI VISION SETTINGS</h2>
         </div>
         <button id="btn-close-gemini-modal" class="modal-close-btn">&times;</button>
@@ -514,28 +594,31 @@
 
       <!-- Modal Body -->
       <div class="modal-body-pad">
-        <p class="ai-modal-desc-callout">Configure multimodal AI vision engines to generate descriptive captions covering poses, lighting, subjects, background, and cultural/regional characteristics.</p>
+        <p class="ai-modal-desc-callout">Configure multimodal AI vision engines to generate descriptive captions
+          covering poses, lighting, subjects, background, and cultural/regional characteristics.</p>
 
         <!-- GOOGLE GEMINI -->
         <div id="section-gemini-config">
           <div class="ai-provider-header-row">
             <span class="ai-provider-name-badge">GOOGLE GEMINI</span>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="ai-get-key-link">GET FREE KEY &nearr;</a>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="ai-get-key-link">GET
+              FREE KEY &nearr;</a>
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">API KEY</label>
-            <input type="password" id="input-gemini-api-key" placeholder="AIzaSy..." autocomplete="off" class="ai-swiss-input">
+            <input type="password" id="input-gemini-api-key" placeholder="AIzaSy..." autocomplete="off"
+              class="ai-swiss-input">
           </div>
           <div style="display:flex;flex-direction:column;">
             <label class="ai-field-label">MODEL</label>
             <select id="select-gemini-model" class="ai-swiss-select">
-                <option value="gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; RECOMMENDED &#9733;</option>
-                <option value="gemini-3.5-flash">GEMINI 3.5 FLASH &mdash; HIGH SPEED</option>
-                <option value="gemini-3.0-flash">GEMINI 3.0 FLASH</option>
-                <option value="gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE &mdash; LIGHTWEIGHT</option>
-                <option value="gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE &mdash; LIGHTWEIGHT</option>
-                <option value="gemini-3.0-flash-lite">GEMINI 3.0 FLASH-LITE &mdash; LIGHTWEIGHT</option>
-              </select>
+              <option value="gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; RECOMMENDED &#9733;</option>
+              <option value="gemini-3.5-flash">GEMINI 3.5 FLASH &mdash; HIGH SPEED</option>
+              <option value="gemini-3.0-flash">GEMINI 3.0 FLASH</option>
+              <option value="gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+              <option value="gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+              <option value="gemini-3.0-flash-lite">GEMINI 3.0 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+            </select>
           </div>
           <p class="ai-swiss-hint">API keys are stored directly in your browser localStorage only.</p>
         </div>
@@ -544,11 +627,13 @@
         <div id="section-openai-config" style="display:none;">
           <div class="ai-provider-header-row">
             <span class="ai-provider-name-badge">OPENAI VISION</span>
-            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="ai-get-key-link">GET KEY &nearr;</a>
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="ai-get-key-link">GET
+              KEY &nearr;</a>
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">API KEY</label>
-            <input type="password" id="input-openai-api-key" placeholder="sk-proj-..." autocomplete="off" class="ai-swiss-input">
+            <input type="password" id="input-openai-api-key" placeholder="sk-proj-..." autocomplete="off"
+              class="ai-swiss-input">
           </div>
           <div style="display:flex;flex-direction:column;">
             <label class="ai-field-label">MODEL</label>
@@ -564,16 +649,19 @@
         <div id="section-claude-config" style="display:none;">
           <div class="ai-provider-header-row">
             <span class="ai-provider-name-badge">ANTHROPIC CLAUDE</span>
-            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="ai-get-key-link">GET KEY &nearr;</a>
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener"
+              class="ai-get-key-link">GET KEY &nearr;</a>
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">API KEY</label>
-            <input type="password" id="input-claude-api-key" placeholder="sk-ant-api03-..." autocomplete="off" class="ai-swiss-input">
+            <input type="password" id="input-claude-api-key" placeholder="sk-ant-api03-..." autocomplete="off"
+              class="ai-swiss-input">
           </div>
           <div style="display:flex;flex-direction:column;">
             <label class="ai-field-label">MODEL</label>
             <select id="select-claude-model" class="ai-swiss-select">
-              <option value="claude-3-5-sonnet-20241022" selected>CLAUDE 3.5 SONNET &mdash; LATEST VISION FLAGSHIP &#9733;</option>
+              <option value="claude-3-5-sonnet-20241022" selected>CLAUDE 3.5 SONNET &mdash; LATEST VISION FLAGSHIP
+                &#9733;</option>
               <option value="claude-3-5-haiku-20241022">CLAUDE 3.5 HAIKU &mdash; LIGHTWEIGHT &amp; FAST</option>
             </select>
           </div>
@@ -584,16 +672,19 @@
         <div id="section-groq-config" style="display:none;">
           <div class="ai-provider-header-row">
             <span class="ai-provider-name-badge">GROQ (LLAMA VISION)</span>
-            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="ai-get-key-link">GET FREE KEY &nearr;</a>
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="ai-get-key-link">GET FREE KEY
+              &nearr;</a>
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">API KEY</label>
-            <input type="password" id="input-groq-api-key" placeholder="gsk_..." autocomplete="off" class="ai-swiss-input">
+            <input type="password" id="input-groq-api-key" placeholder="gsk_..." autocomplete="off"
+              class="ai-swiss-input">
           </div>
           <div style="display:flex;flex-direction:column;">
             <label class="ai-field-label">MODEL</label>
             <select id="select-groq-model" class="ai-swiss-select">
-              <option value="llama-3.2-11b-vision-preview" selected>LLAMA 3.2 11B VISION &mdash; LIGHTWEIGHT &amp; ULTRA-FAST &#9733;</option>
+              <option value="llama-3.2-11b-vision-preview" selected>LLAMA 3.2 11B VISION &mdash; LIGHTWEIGHT &amp;
+                ULTRA-FAST &#9733;</option>
               <option value="llama-3.2-90b-vision-preview">LLAMA 3.2 90B VISION &mdash; LATEST HIGH FIDELITY</option>
             </select>
           </div>
@@ -603,47 +694,54 @@
         <div id="section-huggingface-config" style="display:none;">
           <div class="ai-provider-header-row">
             <span class="ai-provider-name-badge">HUGGING FACE INFERENCE API</span>
-            <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" class="ai-get-key-link">GET USER TOKEN &nearr;</a>
+            <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" class="ai-get-key-link">GET
+              USER TOKEN &nearr;</a>
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">USER ACCESS TOKEN (HF_TOKEN)</label>
-            <input type="password" id="input-huggingface-api-key" placeholder="hf_..." autocomplete="off" class="ai-swiss-input">
+            <input type="password" id="input-huggingface-api-key" placeholder="hf_..." autocomplete="off"
+              class="ai-swiss-input">
           </div>
           <div style="display:flex;flex-direction:column;margin-bottom:12px;">
             <label class="ai-field-label">VISION MODEL REPO ID</label>
             <select id="select-huggingface-model" class="ai-swiss-select">
-              <option value="Salesforce/blip-image-captioning-large" selected>Salesforce/blip-image-captioning-large &mdash; RECOMMENDED &#9733;</option>
-              <option value="nlpconnect/vit-gpt2-image-captioning">nlpconnect/vit-gpt2-image-captioning &mdash; LIGHTWEIGHT</option>
+              <option value="Salesforce/blip-image-captioning-large" selected>Salesforce/blip-image-captioning-large
+                &mdash; RECOMMENDED &#9733;</option>
+              <option value="nlpconnect/vit-gpt2-image-captioning">nlpconnect/vit-gpt2-image-captioning &mdash;
+                LIGHTWEIGHT</option>
               <option value="facebook/detr-resnet-50">facebook/detr-resnet-50 &mdash; OBJECT DETECTION</option>
             </select>
           </div>
-          <p class="ai-swiss-hint">Hugging Face free serverless inference API. Tokens are stored securely in browser localStorage only.</p>
+          <p class="ai-swiss-hint">Hugging Face free serverless inference API. Tokens are stored securely in browser
+            localStorage only.</p>
         </div>
       </div>
 
-      
-        <!-- TEST MODEL PLAYGROUND -->
-        <div class="ai-test-panel" id="ai-test-panel">
-          <div class="ai-test-header">
-            <span class="ai-test-title">&#9889; LIVE MODEL TEST BENCH</span>
-            <span class="ai-test-tag">INSTANT VERIFY</span>
-          </div>
-          <p class="ai-test-desc">Send a diagnostic test request to verify API key authentication, model availability, and response latency.</p>
-          <div class="ai-test-actions">
-            <button type="button" id="btn-test-ai-model" class="btn-ai-test-run">
-              <span id="ai-test-spinner" class="ai-test-spinner" style="display:none;"></span>
-              <span id="ai-test-btn-label">&#9654; TEST ACTIVE MODEL</span>
-            </button>
-            <button type="button" id="btn-test-ai-stop" class="btn-ai-test-stop" style="display:none;" title="Cancel active test request">
-              <span>&#9632; STOP TEST</span>
-            </button>
-            <span id="ai-test-status" class="ai-test-status-badge" style="display:none;">READY</span>
-          </div>
-          <div id="ai-test-result-box" class="ai-test-result-box" style="display:none;">
-            <div class="ai-test-result-meta" id="ai-test-result-meta"></div>
-            <pre class="ai-test-output" id="ai-test-output"></pre>
-          </div>
+
+      <!-- TEST MODEL PLAYGROUND -->
+      <div class="ai-test-panel" id="ai-test-panel">
+        <div class="ai-test-header">
+          <span class="ai-test-title">&#9889; LIVE MODEL TEST BENCH</span>
+          <span class="ai-test-tag">INSTANT VERIFY</span>
         </div>
+        <p class="ai-test-desc">Send a diagnostic test request to verify API key authentication, model availability, and
+          response latency.</p>
+        <div class="ai-test-actions">
+          <button type="button" id="btn-test-ai-model" class="btn-ai-test-run">
+            <span id="ai-test-spinner" class="ai-test-spinner" style="display:none;"></span>
+            <span id="ai-test-btn-label">&#9654; TEST ACTIVE MODEL</span>
+          </button>
+          <button type="button" id="btn-test-ai-stop" class="btn-ai-test-stop" style="display:none;"
+            title="Cancel active test request">
+            <span>&#9632; STOP TEST</span>
+          </button>
+          <span id="ai-test-status" class="ai-test-status-badge" style="display:none;">READY</span>
+        </div>
+        <div id="ai-test-result-box" class="ai-test-result-box" style="display:none;">
+          <div class="ai-test-result-meta" id="ai-test-result-meta"></div>
+          <pre class="ai-test-output" id="ai-test-output"></pre>
+        </div>
+      </div>
 
       <!-- Footer -->
       <div class="modal-footer-pad">
@@ -656,11 +754,15 @@
     </div>
   </div>
   <div class="swiss-modal-scrim" id="compare-modal" style="z-index: 1060;">
-    <div class="swiss-modal-dialog" style="max-width: 950px; width: 92vw; border: 2px solid #ff3300; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);">
-      <div class="modal-title-bar" style="background: #111; border-bottom: 2px solid #ff3300; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px;">
+    <div class="swiss-modal-dialog"
+      style="max-width: 950px; width: 92vw; border: 2px solid #ff3300; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);">
+      <div class="modal-title-bar"
+        style="background: #111; border-bottom: 2px solid #ff3300; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; border-radius: 50%; box-shadow: 0 0 8px #ff3300;"></span>
-          <h2 style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.05em; color: #fff;">
+          <span
+            style="display: inline-block; width: 10px; height: 10px; background: #ff3300; border-radius: 50%; box-shadow: 0 0 8px #ff3300;"></span>
+          <h2
+            style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.05em; color: #fff;">
             MULTI-MODEL AI VISION COMPARISON &amp; SELECTION
           </h2>
         </div>
@@ -668,33 +770,40 @@
       </div>
 
       <div class="modal-body-pad" style="padding: 16px 20px; background: #0e0e0e; max-height: 80vh; overflow-y: auto;">
-        
+
         <!-- Selection Header: checkboxes for active models -->
         <div style="background: #161616; border: 1px solid #282828; padding: 12px 16px; margin-bottom: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <strong style="font-family: 'Space Mono', monospace; font-size: 0.78rem; color: #fff; letter-spacing: 0.05em;">
+            <strong
+              style="font-family: 'Space Mono', monospace; font-size: 0.78rem; color: #fff; letter-spacing: 0.05em;">
               SELECT MODELS TO RUN CONCURRENTLY:
             </strong>
-            <button id="btn-execute-comparison" class="footer-btn btn-save" style="flex: initial; padding: 6px 18px; font-size: 0.75rem; background: #ff3300; color: #fff;">
+            <button id="btn-execute-comparison" class="footer-btn btn-save"
+              style="flex: initial; padding: 6px 18px; font-size: 0.75rem; background: #ff3300; color: #fff;">
               <span id="compare-spinner" class="swiss-pulse-spinner" style="display: none; margin-right: 6px;"></span>
               <span id="compare-btn-text">RUN ALL SELECTED MODELS &rarr;</span>
             </button>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;" id="compare-model-checkboxes">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;"
+            id="compare-model-checkboxes">
+            <label
+              style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
               <input type="checkbox" id="check-compare-gemini" checked style="accent-color: #ff3300;">
               <span>Google Gemini 3.8 Flash</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+            <label
+              style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
               <input type="checkbox" id="check-compare-openai" checked style="accent-color: #ff3300;">
               <span>OpenAI GPT-4o</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+            <label
+              style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
               <input type="checkbox" id="check-compare-claude" checked style="accent-color: #ff3300;">
               <span>Claude 3.5 Sonnet</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+            <label
+              style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
               <input type="checkbox" id="check-compare-groq" style="accent-color: #ff3300;">
               <span>Groq Llama 3.2 11B</span>
             </label>
@@ -702,16 +811,21 @@
         </div>
 
         <!-- Comparison Cards Grid -->
-        <div id="compare-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+        <div id="compare-results-grid"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
           <!-- Dynamically populated comparison cards -->
-          <div style="background: #141414; border: 1px dashed #333; padding: 24px; text-align: center; color: #777; font-family: 'Space Mono', monospace; font-size: 0.8rem; grid-column: 1 / -1;">
-            Select which models to compare above and click [RUN ALL SELECTED MODELS &rarr;] to generate side-by-side prompt responses.
+          <div
+            style="background: #141414; border: 1px dashed #333; padding: 24px; text-align: center; color: #777; font-family: 'Space Mono', monospace; font-size: 0.8rem; grid-column: 1 / -1;">
+            Select which models to compare above and click [RUN ALL SELECTED MODELS &rarr;] to generate side-by-side
+            prompt responses.
           </div>
         </div>
 
       </div>
-      <div class="modal-footer-pad" style="padding: 10px 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: flex-end;">
-        <button id="btn-cancel-compare" class="footer-btn btn-prev" style="flex: initial; padding: 6px 16px;">CLOSE</button>
+      <div class="modal-footer-pad"
+        style="padding: 10px 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: flex-end;">
+        <button id="btn-cancel-compare" class="footer-btn btn-prev"
+          style="flex: initial; padding: 6px 16px;">CLOSE</button>
       </div>
     </div>
   </div>
@@ -720,8 +834,10 @@
     <div class="swiss-modal-dialog guide-modal-dialog">
       <div class="modal-title-bar">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300;"></span>
-          <h2 style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; color: #000; text-transform: uppercase;">
+          <span
+            style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300;"></span>
+          <h2
+            style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; color: #000; text-transform: uppercase;">
             REDDIZ MANUAL &amp; API KEYS // &lt; nissshh / &gt;
           </h2>
         </div>
@@ -730,11 +846,14 @@
 
       <div class="modal-body-pad">
         <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #000;">
-          <h3 style="font-family: 'Space Mono', monospace; font-size: 1.05rem; font-weight: 900; margin: 0 0 8px 0; color: #000; letter-spacing: -0.02em;">
+          <h3
+            style="font-family: 'Space Mono', monospace; font-size: 1.05rem; font-weight: 900; margin: 0 0 8px 0; color: #000; letter-spacing: -0.02em;">
             OPERATOR HANDBOOK // WORKFLOW INSTRUCTIONS
           </h3>
           <p style="font-size: 0.86rem; line-height: 1.55; color: #444; margin: 0;">
-            REDDIZ is a high-throughput dataset authoring workstation built for visual dataset generation, portrait training, and fine-tuning. It harvests Reddit image boards, formats training captions, bounds objects, and packages clean datasets.
+            REDDIZ is a high-throughput dataset authoring workstation built for visual dataset generation, portrait
+            training, and fine-tuning. It harvests Reddit image boards, formats training captions, bounds objects, and
+            packages clean datasets.
           </p>
         </div>
 
@@ -744,7 +863,8 @@
               <span class="guide-step-num">01 /</span> FETCH MEDIA
             </div>
             <p class="guide-step-body">
-              Type target subreddits in the top bar (e.g. <code>streetphotography, cats, wallpapers</code>) and press Enter. All media streams into the vertical filmstrip ready for annotation.
+              Type target subreddits in the top bar (e.g. <code>streetphotography, cats, wallpapers</code>) and press
+              Enter. All media streams into the vertical filmstrip ready for annotation.
             </p>
           </div>
 
@@ -753,7 +873,10 @@
               <span class="guide-step-num">02 /</span> MULTIMODAL AI VISION
             </div>
             <p class="guide-step-body">
-              Use the inline model picker in the caption header or click <strong>&#10022; PROMPT</strong> to analyze the image with Google Gemini, OpenAI ChatGPT, Anthropic Claude, or Groq Vision. The engine automatically outputs objective subject poses, facial features, Indian regional traits, lighting, shadows, and environment.
+              Use the inline model picker in the caption header or click <strong>&#10022; PROMPT</strong> to analyze the
+              image with Google Gemini, OpenAI ChatGPT, Anthropic Claude, or Groq Vision. The engine automatically
+              outputs objective subject poses, facial features, Indian regional traits, lighting, shadows, and
+              environment.
             </p>
           </div>
 
@@ -762,7 +885,8 @@
               <span class="guide-step-num">03 /</span> BOUNDING BOXES &amp; TOKENS
             </div>
             <p class="guide-step-body">
-              Click and drag directly on the canvas to draw class boxes (<code>subject</code>, <code>foreground</code>, <code>background</code>). Add specific trigger tags or tokens with Enter.
+              Click and drag directly on the canvas to draw class boxes (<code>subject</code>, <code>foreground</code>,
+              <code>background</code>). Add specific trigger tags or tokens with Enter.
             </p>
           </div>
 
@@ -771,12 +895,15 @@
               <span class="guide-step-num">04 /</span> SPEED KEYS &amp; EXPORT
             </div>
             <p class="guide-step-body">
-              Press <strong>[ENTER]</strong> to Save &amp; Advance &bull; <strong>[X]</strong> to Ignore &bull; <strong>[&uarr; / &darr;]</strong> or <strong>[A / D]</strong> to navigate. When done, click <strong>DONE &amp; DOWNLOAD ZIP</strong> for training-ready YOLO, COCO, or Stable Diffusion archives.
+              Press <strong>[ENTER]</strong> to Save &amp; Advance &bull; <strong>[X]</strong> to Ignore &bull;
+              <strong>[&uarr; / &darr;]</strong> or <strong>[A / D]</strong> to navigate. When done, click <strong>DONE
+                &amp; DOWNLOAD ZIP</strong> for training-ready YOLO, COCO, or Stable Diffusion archives.
             </p>
           </div>
         </div>
 
-        <h4 style="font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 900; letter-spacing: 0.08em; color: #000; margin: 10px 0 10px 0; text-transform: uppercase;">
+        <h4
+          style="font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 900; letter-spacing: 0.08em; color: #000; margin: 10px 0 10px 0; text-transform: uppercase;">
           DIRECT API KEY PORTALS
         </h4>
 
@@ -797,7 +924,8 @@
             <span class="guide-arrow">GET KEY &nearr;</span>
           </a>
 
-          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="guide-key-link-row">
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener"
+            class="guide-key-link-row">
             <div class="guide-key-left">
               <span class="guide-badge">CLAUDE</span>
               <span class="guide-key-name">Anthropic Console (Claude 3.5 Sonnet / Haiku)</span>
@@ -837,7 +965,8 @@
     <div class="swiss-modal-dialog">
       <div class="modal-title-bar">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300; flex-shrink:0;"></span>
+          <span
+            style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300; flex-shrink:0;"></span>
           <h2 id="error-modal-title">
             SYSTEM NOTICE
           </h2>
@@ -867,17 +996,67 @@
       </div>
     </div>
   </div>
+
+  <!-- Swiss Brutalist Local Backup & Vault Modal -->
+  <div class="swiss-modal-scrim" id="backup-vault-modal" style="z-index: 1050;">
+    <div class="swiss-modal-dialog" style="max-width: 680px;">
+      <div class="modal-title-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1d63ed" stroke-width="2.2"
+            stroke-linecap="square">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <h2>LOCAL BACKUPS &amp; RESTORE</h2>
+        </div>
+        <button id="btn-close-backup-vault" class="modal-close-btn" type="button">&times;</button>
+      </div>
+
+      <div class="modal-body-pad" style="padding: 24px; overflow-y: auto; max-height: calc(80vh - 120px);">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div
+              style="font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--swiss-text-dim); text-transform: uppercase;">
+              // LOCAL BROWSER STORAGE
+            </div>
+            <p style="font-size: 0.88rem; color: var(--swiss-text-muted); margin-top: 3px;">
+              Snapshots include timestamps, image counts, annotations, and bounding boxes.
+            </p>
+          </div>
+          <button id="btn-vault-save-new" type="button" class="reddiz-btn-blue"
+            style="padding: 8px 16px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+            </svg>
+            <span>+ SNAPSHOT CURRENT SESSION</span>
+          </button>
+        </div>
+
+        <div id="backup-vault-list" class="backup-vault-list" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Dynamically populated list of backups -->
+        </div>
+      </div>
+
+      <div class="modal-footer-pad"
+        style="padding: 14px 20px; border-top: 2px solid var(--swiss-black); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+        <span id="vault-summary-text"
+          style="font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--swiss-text-dim);">
+          0 SAVED BACKUPS
+        </span>
+        <button id="btn-close-backup-vault-bottom" type="button" class="footer-btn btn-ignore"
+          style="padding: 6px 18px; font-size: 0.82rem;">
+          CLOSE
+        </button>
+      </div>
+    </div>
+  </div>
   <script src="/app.js"></script>
   <!-- Vercel Web Analytics -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </body>
+
 </html>
-
-
-
-
-
-
-
-

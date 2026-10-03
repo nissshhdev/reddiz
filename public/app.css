@@ -134,15 +134,44 @@ body {
   border-right: 2px solid var(--swiss-black);
   display: flex;
   align-items: center;
-  max-width: 260px;
-  background: var(--swiss-white);
+  max-width: 290px;
+  background: #fff8f5;
 }
 
 .warning-text {
   font-family: 'Archivo', sans-serif;
   font-size: 0.68rem;
-  line-height: 1.22;
-  color: #111;
+  line-height: 1.25;
+  color: #c92a2a;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.warning-text strong {
+  color: #e03131;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.warning-icon-svg {
+  color: #e03131;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  animation: warningPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
 }
 
 .download-cell {
@@ -3280,3 +3309,235 @@ body {
     padding: 8px 12px;
   }
 }
+
+
+/* ==========================================================================
+   AESTHETIC BLUE DESIGN SYSTEM & HEADER BUTTON CONTROLS
+   High-contrast electric cobalt blue with matching deep hover & clean borders
+   ========================================================================== */
+
+:root {
+  --aesthetic-blue: #1d63ed;
+  --aesthetic-blue-hover: #154ec1;
+  --aesthetic-blue-active: #0f3ba1;
+  --aesthetic-blue-light: #eff6ff;
+  --aesthetic-blue-subtle: #dbeafe;
+}
+
+.backup-cell {
+  padding: 4px 12px;
+  border-right: 2px solid var(--swiss-black);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--swiss-white);
+  flex-shrink: 0;
+}
+
+.download-cell {
+  padding: 4px 12px;
+  border-right: 2px solid var(--swiss-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--swiss-white);
+  flex-shrink: 0;
+}
+
+.reddiz-btn-blue {
+  background-color: var(--aesthetic-blue);
+  color: #ffffff;
+  border: 2px solid var(--swiss-black);
+  padding: 8px 16px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 2px 0px var(--swiss-black);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.reddiz-btn-blue:hover:not(:disabled) {
+  background-color: var(--aesthetic-blue-hover);
+  color: #ffffff;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--swiss-black);
+}
+
+.reddiz-btn-blue:active:not(:disabled) {
+  background-color: var(--aesthetic-blue-active);
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px var(--swiss-black);
+}
+
+.reddiz-btn-blue:disabled {
+  background-color: #93b4f5;
+  border-color: #555555;
+  color: #e0e7ff;
+  box-shadow: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reddiz-btn-blue-outline {
+  background-color: #ffffff;
+  color: var(--aesthetic-blue);
+  border: 2px solid var(--aesthetic-blue);
+  padding: 8px 14px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 2px 0px rgba(29, 99, 237, 0.25);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.reddiz-btn-blue-outline:hover:not(:disabled) {
+  background-color: var(--aesthetic-blue);
+  color: #ffffff;
+  border-color: var(--swiss-black);
+  box-shadow: 3px 3px 0px var(--swiss-black);
+  transform: translate(-1px, -1px);
+}
+
+.reddiz-btn-blue-outline:active:not(:disabled) {
+  background-color: var(--aesthetic-blue-hover);
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px var(--swiss-black);
+}
+
+/* Quick Action Stage Buttons */
+.stage-quick-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  color: var(--aesthetic-blue);
+  border: 1.5px solid var(--swiss-black);
+  margin-left: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  padding: 0;
+  box-shadow: 1px 1px 0 var(--swiss-black);
+}
+
+.stage-quick-action-btn:hover {
+  background: var(--aesthetic-blue);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.stage-quick-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  color: #d32f2f;
+  border: 1.5px solid var(--swiss-black);
+  margin-left: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  padding: 0;
+  box-shadow: 1px 1px 0 var(--swiss-black);
+}
+
+.stage-quick-delete-btn:hover {
+  background: #d32f2f;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Local Backup Vault Items */
+.vault-item-card {
+  border: 2px solid var(--swiss-black);
+  background: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.9);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vault-item-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 1);
+}
+
+.vault-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.vault-badge-count {
+  background: var(--aesthetic-blue-subtle);
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.vault-badge-annotated {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+/* Spacious, non-congested toast notification */
+.save-toast-banner {
+  position: fixed;
+  bottom: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  color: #000000;
+  border: 2.5px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  padding: 12px 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  animation: slideToastUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes slideToastUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+

@@ -8,7 +8,7 @@ I made this because manual dataset scraping, cropping, and repetitive labeling i
 
 ## What It Does
 
-- **Multi-Subreddit Fetching**: Enter single or multiple subreddits separated by commas or spaces (e.g. `cats, streetphotography` or NSFW subreddits like `IndianInstaBaddies, Naughty_Navels`).
+- **Multi-Subreddit Fetching**: Enter single or multiple subreddits separated by commas or spaces (e.g. `cats, EarthPorn, streetphotography`).
 - **NSFW & Rate-Limit Handling**: Uses age-verification session headers and exponential backoff retry logic to bypass Reddit's aggressive 429 throttling and hotlink blocks.
 - **9:16 Center Crop Viewport**: Automatically previews and crops images from the center into a modern 9:16 aspect ratio.
 - **Vertical Gallery Strip**: A scrollable vertical carousel on the left that lets you flick through thumbnails with the up and down arrow keys.
