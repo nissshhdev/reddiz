@@ -1,5 +1,7 @@
 let activeAiAbortController = null;
 let activeTestAbortController = null;
+let activeFetchAbortController = null;
+let activeFetchEventSource = null;
 // State management
 const state = {
   currentSubredditQuery: '',
@@ -29,6 +31,7 @@ function getClassColor(className) {
 // DOM Elements
 const inputSubreddit = document.getElementById('input-subreddit');
 const btnFetch = document.getElementById('btn-fetch');
+const btnStopFetch = document.getElementById('btn-stop-fetch');
 const fetchSpinner = document.getElementById('fetch-spinner');
 const fetchIcon = document.getElementById('fetch-icon');
 const fetchPctBadge = document.getElementById('fetch-pct-badge');
@@ -61,6 +64,19 @@ const btnSaveNext = document.getElementById('btn-save-next');
 
 const redditPostTitle = document.getElementById('reddit-post-title');
 const annotationCaption = document.getElementById('annotation-caption');
+
+function autoResizeCaptionTextarea() {
+  if (!annotationCaption) return;
+  // Set to auto first to accurately measure scrollHeight without artificial scroll stretching
+  annotationCaption.style.height = 'auto';
+  const computedHeight = annotationCaption.scrollHeight;
+  const minH = 48;
+  const maxH = 380;
+  const targetHeight = Math.min(Math.max(computedHeight, minH), maxH);
+  annotationCaption.style.height = targetHeight + 'px';
+  annotationCaption.style.overflowY = computedHeight > maxH ? 'auto' : 'hidden';
+}
+
 const btnClearCaption = document.getElementById('btn-clear-caption');
 const btnClearBboxes = document.getElementById('btn-clear-bboxes');
 const btnAiPrompt = document.getElementById("btn-ai-prompt");
@@ -241,6 +257,8 @@ function setupEventListeners() {
   if (btnQuickDeleteStage) btnQuickDeleteStage.addEventListener('click', () => deleteImageFromQueue(state.currentIndex));
   const btnQuickDownloadStage = document.getElementById('btn-quick-download-stage');
   if (btnQuickDownloadStage) btnQuickDownloadStage.addEventListener('click', () => downloadCurrentStageImage());
+  const btnClearBoardAll = document.getElementById('btn-clear-board-all');
+  if (btnClearBoardAll) btnClearBoardAll.addEventListener('click', () => clearAllImagesFromBoard());
 
   // Keyboard navigation: UP/DOWN for vertical gallery, LEFT/RIGHT for images, ENTER for save, X for ignore
   window.addEventListener('keydown', (e) => {
@@ -316,6 +334,7 @@ function setupEventListeners() {
         annot.caption = '';
         inheritedPill.style.display = 'none';
       }
+      autoResizeCaptionTextarea();
       annotationCaption.focus();
     });
   }
@@ -565,6 +584,7 @@ function setupEventListeners() {
       annot.caption = annotationCaption.value;
       inheritedPill.style.display = 'none';
     }
+    autoResizeCaptionTextarea();
   });
 
   // Export Modal
@@ -762,39 +782,54 @@ async function fetchSubreddits(query) {
   }
 
   state.currentSubredditQuery = query;
-  
   state.sort = 'hot';
 
-  const progressCtrl = startGlobalProgress('FETCHING SUBREDDIT MEDIA...');
+  // Setup abort controller & stop button
+  if (activeFetchAbortController) {
+    activeFetchAbortController.abort();
+  }
+  activeFetchAbortController = new AbortController();
+  const signal = activeFetchAbortController.signal;
+
+  let stoppedByUser = false;
+  let batchFetchedImages = [];
+  let batchSubreddits = [];
+
+  const progressCtrl = startGlobalProgress('STREAMING MEDIA FROM SUBREDDIT(S)...');
   btnFetch.disabled = true;
   fetchSpinner.style.display = 'inline-block';
   fetchIcon.textContent = 'FETCHING...';
 
-  try {
-    const res = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=100`);
-    const data = await res.json();
+  if (btnStopFetch) {
+    btnStopFetch.style.display = 'inline-flex';
+    btnStopFetch.onclick = () => {
+      stoppedByUser = true;
+      if (activeFetchAbortController) {
+        activeFetchAbortController.abort();
+      }
+    };
+  }
 
-    if (!data.success || !data.images || data.images.length === 0) {
-      showErrorModal(data.error || 'No images could be retrieved. The subreddit may be private, banned, empty, or misspelled.', 'FETCH FAILED', 'REDDIT API', 'Verify that the subreddit exists and has public image posts.');
-      return;
-    }
+  const isAppending = state.images && state.images.length > 0;
+  let initialLoaded = false;
 
-    const isAppending = state.images && state.images.length > 0;
-    
+  const commitLoadedImages = () => {
+    if (batchFetchedImages.length === 0) return;
+
     if (isAppending) {
       const startIdx = state.images.length;
-      data.images.forEach((img, i) => {
+      batchFetchedImages.forEach((img, i) => {
         img.index = startIdx + i;
         state.images.push(img);
       });
-      data.subreddits.forEach(s => {
+      batchSubreddits.forEach(s => {
         if (!state.subreddits.includes(s)) state.subreddits.push(s);
       });
       renderFilmstrip();
       updateProgress();
     } else {
-      state.images = data.images;
-      state.subreddits = data.subreddits || [query];
+      state.images = batchFetchedImages;
+      state.subreddits = batchSubreddits.length > 0 ? batchSubreddits : [query];
       state.currentIndex = 0;
       state.annotations = {};
       state.lastAnnotation = null;
@@ -803,18 +838,134 @@ async function fetchSubreddits(query) {
       loadImage(0);
       updateProgress();
     }
+  };
 
-    if (data.warnings && data.warnings.length > 0) {
-      console.warn('Some subreddits had warnings:', data.warnings);
+  try {
+    const streamUrl = `/api/stream-subreddits?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=100`;
+    const response = await fetch(streamUrl, { signal });
+
+    if (!response.ok || !response.body) {
+      // Fallback to legacy single-shot fetch if streaming not available
+      const fallbackRes = await fetch(`/api/fetch-subreddit?subreddit=${encodeURIComponent(query)}&sort=${state.sort}&limit=100`, { signal });
+      const data = await fallbackRes.json();
+      if (!data.success || !data.images || data.images.length === 0) {
+        throw new Error(data.error || 'No images could be retrieved.');
+      }
+      batchFetchedImages = data.images;
+      batchSubreddits = data.subreddits || [query];
+      commitLoadedImages();
+    } else {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        let currentEvent = null;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('event:')) {
+            currentEvent = trimmed.replace('event:', '').trim();
+          } else if (trimmed.startsWith('data:') && currentEvent) {
+            const dataStr = trimmed.replace('data:', '').trim();
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (currentEvent === 'sub_start') {
+                if (stageLoadingText) {
+                  stageLoadingText.textContent = `FETCHING r/${parsed.subreddit.toUpperCase()} (${parsed.index + 1}/${parsed.totalSubs})...`;
+                }
+              } else if (currentEvent === 'sub_items') {
+                if (parsed.items && parsed.items.length > 0) {
+                  batchFetchedImages.push(...parsed.items);
+                  if (!batchSubreddits.includes(parsed.subreddit)) {
+                    batchSubreddits.push(parsed.subreddit);
+                  }
+                  // Incrementally update UI so user immediately sees images coming in!
+                  if (!isAppending && !initialLoaded && batchFetchedImages.length > 0) {
+                    state.images = [...batchFetchedImages];
+                    state.subreddits = [...batchSubreddits];
+                    renderFilmstrip();
+                    loadImage(0);
+                    initialLoaded = true;
+                  } else if (isAppending) {
+                    renderFilmstrip();
+                  }
+                  if (fetchIcon) {
+                    fetchIcon.textContent = `${batchFetchedImages.length} MEDIAS...`;
+                  }
+                }
+              } else if (currentEvent === 'sub_error') {
+                console.warn(`Streaming sub warning:`, parsed.message);
+              } else if (currentEvent === 'complete') {
+                // Done
+              }
+            } catch (jsonErr) {
+              console.warn('JSON stream chunk parse error:', jsonErr);
+            }
+            currentEvent = null;
+          }
+        }
+      }
+
+      // Finish applying any remaining batches
+      if (!initialLoaded && batchFetchedImages.length > 0) {
+        commitLoadedImages();
+      } else if (initialLoaded) {
+        // Update final state references
+        state.images = batchFetchedImages;
+        state.subreddits = batchSubreddits;
+        renderFilmstrip();
+        updateProgress();
+      }
     }
+
+    if (batchFetchedImages.length === 0) {
+      showErrorModal('No images could be retrieved. The subreddit(s) may be private, banned, empty, or restricted.', 'FETCH FAILED', 'NO MEDIA FOUND', 'Verify subreddit spelling and public image availability.');
+      return;
+    }
+
+    showSaveToast(`FETCH COMPLETE • ${batchFetchedImages.length} MEDIAS LOADED`);
   } catch (err) {
-    console.error('Fetch error:', err);
-    showErrorModal(err.message, 'FETCH ERROR', 'NETWORK / RATE LIMIT', 'Reddit may be temporarily rate-limiting requests or your internet connection was interrupted. Please wait a few seconds and try again.');
+    if (err.name === 'AbortError' || stoppedByUser) {
+      // Stopped by user! Load only whatever medias were already fetched
+      if (batchFetchedImages.length > 0) {
+        if (!initialLoaded) {
+          commitLoadedImages();
+        } else {
+          state.images = batchFetchedImages;
+          state.subreddits = batchSubreddits;
+          renderFilmstrip();
+          updateProgress();
+        }
+        showSaveToast(`⏹ FETCH STOPPED • LOADED ${batchFetchedImages.length} MEDIAS FETCHED SO FAR`);
+      } else {
+        showSaveToast("FETCH CANCELLED");
+      }
+    } else {
+      console.error('Fetch error:', err);
+      if (batchFetchedImages.length > 0) {
+        commitLoadedImages();
+        showSaveToast(`LOADED ${batchFetchedImages.length} MEDIAS (ENCOUNTERED NETWORK INTERRUPTION)`);
+      } else {
+        showErrorModal(err.message, 'FETCH ERROR', 'NETWORK / RATE LIMIT', 'Reddit may be temporarily rate-limiting requests or your internet connection was interrupted. Please wait a few seconds and try again.');
+      }
+    }
   } finally {
     if (progressCtrl && typeof progressCtrl.complete === 'function') progressCtrl.complete();
     btnFetch.disabled = false;
     fetchSpinner.style.display = 'none';
     fetchIcon.textContent = 'FETCH MEDIA';
+    if (btnStopFetch) {
+      btnStopFetch.style.display = 'none';
+      btnStopFetch.onclick = null;
+    }
+    activeFetchAbortController = null;
   }
 }
 
@@ -914,6 +1065,7 @@ function generateDefaultCaption(title) {
 function renderCurrentForm() {
   const annot = state.annotations[state.currentIndex] || { caption: '', tags: [], bboxes: [] };
   annotationCaption.value = annot.caption || '';
+  autoResizeCaptionTextarea();
   renderTags();
   renderBboxList();
 }
@@ -1162,12 +1314,39 @@ function drawBox(box, w, h, isLive) {
   ctx.fillText(box.label, bx + 4, by - 5);
 }
 
-// Vertical Gallery Filmstrip rendering
+// Vertical Gallery Filmstrip rendering (Saved/annotated images are filtered out from the carousel view)
 function renderFilmstrip() {
   filmstrip.innerHTML = '';
+
+  // Get active queue items (not yet saved/annotated)
+  const pendingIndices = [];
   state.images.forEach((item, idx) => {
+    const annot = state.annotations[idx];
+    const isAnnotated = annot && annot.isAnnotated && !annot.isIgnored;
+    if (!isAnnotated) {
+      pendingIndices.push(idx);
+    }
+  });
+
+  if (state.images.length > 0 && pendingIndices.length === 0) {
+    const allDoneMsg = document.createElement('div');
+    allDoneMsg.className = 'filmstrip-all-done-banner';
+    allDoneMsg.style.cssText = 'padding: 10px 4px; text-align: center; font-family: "Space Mono", monospace; font-size: 0.62rem; color: #00aa44; font-weight: 700; line-height: 1.3; border: 1.5px dashed #00aa44; background: #eafaf1;';
+    allDoneMsg.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px; display: block; margin-bottom: 2px;">task_alt</span>ALL SAVED';
+    filmstrip.appendChild(allDoneMsg);
+    return;
+  }
+
+  state.images.forEach((item, idx) => {
+    const annot = state.annotations[idx];
+    const isAnnotated = annot && annot.isAnnotated && !annot.isIgnored;
+    // For images whose annotation has been saved, remove from the carousel view
+    if (isAnnotated) {
+      return;
+    }
+
     const thumb = document.createElement('div');
-    thumb.className = `thumb-cell ${idx === state.currentIndex ? 'active' : ''}`;
+    thumb.className = `thumb-cell ${idx === state.currentIndex ? 'active' : ''} ${annot && annot.isIgnored ? 'is-ignored' : ''}`;
     thumb.setAttribute('data-index', idx);
     thumb.innerHTML = `
       <img src="${item.proxyUrl}" alt="thumb" loading="lazy">
@@ -1187,6 +1366,33 @@ function renderFilmstrip() {
     }
     filmstrip.appendChild(thumb);
   });
+}
+
+// Helper to find next unannotated image index
+function getNextPendingImageIndex(fromIndex, forward = true) {
+  if (!state.images || state.images.length === 0) return -1;
+  const total = state.images.length;
+  
+  if (forward) {
+    for (let i = fromIndex + 1; i < total; i++) {
+      const annot = state.annotations[i];
+      if (!annot || !annot.isAnnotated || annot.isIgnored) return i;
+    }
+    for (let i = 0; i < fromIndex; i++) {
+      const annot = state.annotations[i];
+      if (!annot || !annot.isAnnotated || annot.isIgnored) return i;
+    }
+  } else {
+    for (let i = fromIndex - 1; i >= 0; i--) {
+      const annot = state.annotations[i];
+      if (!annot || !annot.isAnnotated || annot.isIgnored) return i;
+    }
+    for (let i = total - 1; i > fromIndex; i--) {
+      const annot = state.annotations[i];
+      if (!annot || !annot.isAnnotated || annot.isIgnored) return i;
+    }
+  }
+  return -1;
 }
 
 // Save Current Image & Advance
@@ -1218,12 +1424,58 @@ function showSaveToast(message = "ANNOTATION SAVED") {
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2400);
 }
 
+function showAllCompletedStage() {
+  if (activeImage) {
+    activeImage.src = '';
+    activeImage.style.display = 'none';
+  }
+  if (imagePlaceholder) {
+    imagePlaceholder.style.display = 'flex';
+    imagePlaceholder.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:24px;">
+        <span class="material-symbols-rounded" style="font-size:46px;color:#00aa44;">verified</span>
+        <h3 style="color:var(--swiss-black);font-weight:900;font-family:'Space Mono',monospace;margin:0;">[ ALL IMAGES ANNOTATED ]</h3>
+        <p style="color:var(--swiss-text-muted);font-size:0.85rem;max-width:320px;line-height:1.4;margin:0;">All items have been labeled and saved. Your dataset is ready for export.</p>
+        <button type="button" class="reddiz-btn-blue" onclick="openExportModal()" style="padding:8px 18px;font-size:0.75rem;margin-top:6px;cursor:pointer;">
+          <span class="material-symbols-rounded" style="font-size:16px;">download</span>
+          <span>EXPORT ZIP ARCHIVE</span>
+        </button>
+      </div>
+    `;
+  }
+  if (bboxCanvas) {
+    const bCtx = bboxCanvas.getContext('2d');
+    if (bCtx) bCtx.clearRect(0, 0, bboxCanvas.width, bboxCanvas.height);
+  }
+  if (imageCounter) {
+    const total = state.images.length;
+    imageCounter.textContent = `COMPLETED (${total}/${total} SAVED)`;
+  }
+  if (redditPostTitle) redditPostTitle.textContent = 'All queue annotations saved • Ready for ZIP download';
+  if (annotationCaption) {
+    annotationCaption.value = '';
+    autoResizeCaptionTextarea();
+  }
+  if (tagsContainer) tagsContainer.innerHTML = '';
+  if (bboxList) bboxList.innerHTML = '// ALL QUEUE ITEMS COMPLETED';
+  if (statusIndicator) {
+    statusIndicator.className = 'status-dot annotated';
+    statusIndicator.style.background = '#00aa44';
+  }
+}
+
 function saveAndNext() {
   saveCurrentAnnotationState(true);
-  if (state.currentIndex < state.images.length - 1) {
-    loadImage(state.currentIndex + 1);
+  renderFilmstrip();
+
+  const nextIdx = getNextPendingImageIndex(state.currentIndex, true);
+  if (nextIdx !== -1) {
+    showSaveToast("ANNOTATION SAVED & REMOVED FROM CAROUSEL");
+    loadImage(nextIdx);
   } else {
-    showSaveToast("FINAL IMAGE ANNOTATION SAVED [USE EXPORT ZIP WHEN READY]");
+    showSaveToast("FINAL IMAGE SAVED • ALL ANNOTATIONS COMPLETED");
+    showAllCompletedStage();
+    openExportModal();
   }
 }
 
@@ -1235,8 +1487,11 @@ function ignoreAndNext() {
   }
   updateStatusBadge();
   updateProgress();
-  if (state.currentIndex < state.images.length - 1) {
-    loadImage(state.currentIndex + 1);
+  renderFilmstrip();
+
+  const nextIdx = getNextPendingImageIndex(state.currentIndex, true);
+  if (nextIdx !== -1) {
+    loadImage(nextIdx);
   } else {
     openExportModal();
   }
@@ -1263,7 +1518,10 @@ function clearStageForEmptyQueue() {
   }
   if (imageCounter) imageCounter.textContent = 'INDEX 00 / 00 [9:16 CROP]';
   if (redditPostTitle) redditPostTitle.textContent = 'No image selected';
-  if (annotationCaption) annotationCaption.value = '';
+  if (annotationCaption) {
+    annotationCaption.value = '';
+    autoResizeCaptionTextarea();
+  }
   if (tagsContainer) tagsContainer.innerHTML = '';
   if (bboxList) bboxList.innerHTML = '// NO BOUNDING BOXES DRAWN';
   if (btnOpenExport) btnOpenExport.disabled = true;
@@ -1327,11 +1585,42 @@ function deleteImageFromQueue(targetIndex) {
   showSaveToast(`DELETED: ${itemTitle.substring(0, 24).toUpperCase()}`);
 }
 
+function clearAllImagesFromBoard() {
+  const total = state.images ? state.images.length : 0;
+  if (total === 0) {
+    showSaveToast("BOARD IS ALREADY EMPTY");
+    return;
+  }
+
+  if (!confirm(`Clear all ${total} image(s) from the board?`)) {
+    return;
+  }
+
+  // Clear current active queue only (leaves saved backups intact in vault)
+  state.images = [];
+  state.annotations = {};
+  state.subreddits = [];
+  state.currentIndex = -1;
+  state.lastAnnotation = null;
+
+  renderFilmstrip();
+  clearStageForEmptyQueue();
+  updateProgress();
+  if (typeof updateStatusBadge === 'function') updateStatusBadge();
+
+  showSaveToast(`🗑 CLEARED ALL ${total} IMAGES FROM BOARD`);
+}
+
 function navigateImage(delta) {
   saveCurrentAnnotationState(false);
-  const nextIdx = state.currentIndex + delta;
-  if (nextIdx >= 0 && nextIdx < state.images.length) {
+  const nextIdx = getNextPendingImageIndex(state.currentIndex, delta > 0);
+  if (nextIdx !== -1) {
     loadImage(nextIdx);
+  } else {
+    const rawNext = state.currentIndex + delta;
+    if (rawNext >= 0 && rawNext < state.images.length) {
+      loadImage(rawNext);
+    }
   }
 }
 
@@ -1580,7 +1869,10 @@ async function generateAiPrompt(apiKey, model, provider) {
     annot.isAnnotated = true;
     state.lastAnnotation = { bboxes: [...annot.bboxes], tags: [...annot.tags], caption: captionText };
     // 2. Update DOM immediately
-    if (annotationCaption) { annotationCaption.value = captionText; }
+    if (annotationCaption) {
+      annotationCaption.value = captionText;
+      autoResizeCaptionTextarea();
+    }
     if (inheritedPill) inheritedPill.style.display = 'none';
     updateStatusBadge();
     updateProgress();
@@ -1589,6 +1881,7 @@ async function generateAiPrompt(apiKey, model, provider) {
     setTimeout(function() {
       if (annotationCaption && state.annotations[state.currentIndex]) {
         annotationCaption.value = state.annotations[state.currentIndex].caption || '';
+        autoResizeCaptionTextarea();
       }
     }, 50);
   } catch (err) {
@@ -2056,9 +2349,14 @@ function persistBackups(list) {
   }
 }
 
-function saveCurrentSessionBackup() {
+const AUTO_BACKUP_INTERVAL_KEY = 'reddiz_auto_backup_interval_minutes';
+let autoBackupTimerId = null;
+
+function saveCurrentSessionBackup(isAutoBackup = false) {
   if (!state.images || state.images.length === 0) {
-    showErrorModal("Your current queue is empty. Load or paste images before creating a backup.", "BACKUP EMPTY", "NO IMAGES IN QUEUE", "Search subreddits or paste images using Ctrl+V.");
+    if (!isAutoBackup) {
+      showErrorModal("Your current queue is empty. Load or paste images before creating a backup.", "BACKUP EMPTY", "NO IMAGES IN QUEUE", "Search subreddits or paste images using Ctrl+V.");
+    }
     return;
   }
 
@@ -2083,6 +2381,7 @@ function saveCurrentSessionBackup() {
     imageCount: totalImages,
     annotatedCount: annotatedCount,
     subreddits: [...subredditsList],
+    isAuto: !!isAutoBackup,
     state: {
       images: state.images,
       annotations: state.annotations,
@@ -2095,14 +2394,134 @@ function saveCurrentSessionBackup() {
 
   const backups = getSavedBackups();
   backups.unshift(newBackup); // latest at top
-  if (backups.length > 20) backups.pop();
+  if (backups.length > 25) backups.pop();
   persistBackups(backups);
 
   // Maintain quick backup cache
   localStorage.setItem('reddiz_backup', JSON.stringify(newBackup.state));
 
-  showSaveToast(`💾 BACKUP SAVED • ${dateFormatted} • ${totalImages} IMAGES`);
+  if (isAutoBackup) {
+    showSaveToast(`⏱ AUTO-BACKUP SAVED • ${totalImages} IMAGES`);
+  } else {
+    showSaveToast(`💾 BACKUP SAVED • ${dateFormatted} • ${totalImages} IMAGES`);
+  }
+
   renderBackupVaultList();
+}
+
+function startAutoBackupSchedule(minutes) {
+  if (autoBackupTimerId) {
+    clearInterval(autoBackupTimerId);
+    autoBackupTimerId = null;
+  }
+
+  const mins = parseInt(minutes, 10);
+  if (isNaN(mins) || mins <= 0) {
+    localStorage.setItem(AUTO_BACKUP_INTERVAL_KEY, 'off');
+    return;
+  }
+
+  localStorage.setItem(AUTO_BACKUP_INTERVAL_KEY, String(mins));
+  const ms = mins * 60 * 1000;
+  autoBackupTimerId = setInterval(() => {
+    if (state.images && state.images.length > 0) {
+      saveCurrentSessionBackup(true);
+    }
+  }, ms);
+}
+
+function initAutoBackupSchedule() {
+  const savedVal = localStorage.getItem(AUTO_BACKUP_INTERVAL_KEY) || '5';
+  const selHeader = document.getElementById('select-auto-backup-interval');
+  const selModal = document.getElementById('select-modal-auto-backup');
+
+  if (selHeader) selHeader.value = savedVal;
+  if (selModal) selModal.value = savedVal;
+
+  if (savedVal !== 'off') {
+    startAutoBackupSchedule(savedVal);
+  }
+
+  const onIntervalChange = (val) => {
+    if (selHeader && selHeader.value !== val) selHeader.value = val;
+    if (selModal && selModal.value !== val) selModal.value = val;
+    startAutoBackupSchedule(val);
+    if (val === 'off') {
+      showSaveToast("AUTO-BACKUP DISABLED");
+    } else {
+      showSaveToast(`AUTO-BACKUP EVERY ${val} MINUTE${val === '1' ? '' : 'S'}`);
+    }
+  };
+
+  if (selHeader) {
+    selHeader.addEventListener('change', (e) => onIntervalChange(e.target.value));
+  }
+  if (selModal) {
+    selModal.addEventListener('change', (e) => onIntervalChange(e.target.value));
+  }
+}
+
+function isPageReload() {
+  try {
+    // Modern Navigation Timing API Level 2
+    const navEntries = performance.getEntriesByType('navigation');
+    if (navEntries && navEntries.length > 0) {
+      return navEntries[0].type === 'reload';
+    }
+    // Deprecated Navigation Timing API Level 1 fallback
+    if (window.performance && window.performance.navigation) {
+      return window.performance.navigation.type === 1; // TYPE_RELOAD = 1
+    }
+  } catch (e) {
+    console.warn('Navigation check error:', e);
+  }
+  return false;
+}
+
+function restoreLatestBackupOnBoot() {
+  const isReload = isPageReload();
+
+  if (!isReload) {
+    // FRESH / NEW PAGE LOAD: Start clean new session!
+    console.log('[REDDIZ BOOT] Fresh page visit/navigation detected. Starting clean new session.');
+    clearStageForEmptyQueue();
+    updateProgress();
+    return false;
+  }
+
+  // PAGE REFRESH (F5 / Ctrl+R / browser reload): Load the latest backup automatically!
+  console.log('[REDDIZ BOOT] Page reload detected. Auto-restoring latest backup.');
+  try {
+    const backups = getSavedBackups();
+    if (backups.length > 0 && backups[0] && backups[0].state) {
+      const latest = backups[0];
+      restoreBackupById(latest.id, true);
+      showSaveToast(`RESTORED LATEST BACKUP ON REFRESH • ${latest.imageCount} IMAGES`);
+      return true;
+    }
+    // Fallback to legacy single backup
+    const legacyRaw = localStorage.getItem('reddiz_backup');
+    if (legacyRaw) {
+      const legacyState = JSON.parse(legacyRaw);
+      if (legacyState && legacyState.images && legacyState.images.length > 0) {
+        state.images = legacyState.images || [];
+        state.annotations = legacyState.annotations || {};
+        state.subreddits = legacyState.subreddits || [];
+        state.classes = legacyState.classes || ['subject', 'foreground', 'background'];
+        state.currentIndex = legacyState.currentIndex || 0;
+        if (typeof renderClassChips === 'function') renderClassChips();
+        if (typeof renderFilmstrip === 'function') renderFilmstrip();
+        if (typeof loadImage === 'function') loadImage(state.currentIndex);
+        if (typeof updateProgress === 'function') updateProgress();
+        if (typeof updateStatusBadge === 'function') updateStatusBadge();
+        showSaveToast(`RESTORED SESSION ON REFRESH • ${state.images.length} IMAGES`);
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not auto-restore latest backup on refresh:', err);
+  }
+  return false;
 }
 
 function renderBackupVaultList() {
@@ -2171,11 +2590,13 @@ function renderBackupVaultList() {
   });
 }
 
-function restoreBackupById(backupId) {
+function restoreBackupById(backupId, silent = false) {
   const backups = getSavedBackups();
   const target = backups.find(b => b.id === backupId);
   if (!target || !target.state) {
-    showErrorModal("Could not find the requested backup snapshot.", "RESTORE FAILED", "STORAGE ERROR", "The backup may have been deleted.");
+    if (!silent) {
+      showErrorModal("Could not find the requested backup snapshot.", "RESTORE FAILED", "STORAGE ERROR", "The backup may have been deleted.");
+    }
     return;
   }
 
@@ -2201,10 +2622,14 @@ function restoreBackupById(backupId) {
     const vaultModal = document.getElementById('backup-vault-modal');
     if (vaultModal) vaultModal.classList.remove('open');
 
-    showSaveToast(`RESTORED BACKUP: ${target.timestamp} (${target.imageCount} IMAGES)`);
+    if (!silent) {
+      showSaveToast(`RESTORED BACKUP: ${target.timestamp} (${target.imageCount} IMAGES)`);
+    }
   } catch (err) {
     console.error('Failed to restore backup:', err);
-    showErrorModal(`Failed to restore backup: ${err.message}`, "RESTORE FAILED", "PARSING ERROR", "Ensure local storage is accessible.");
+    if (!silent) {
+      showErrorModal(`Failed to restore backup: ${err.message}`, "RESTORE FAILED", "PARSING ERROR", "Ensure local storage is accessible.");
+    }
   }
 }
 
@@ -2214,6 +2639,82 @@ function deleteBackupById(backupId) {
   persistBackups(backups);
   renderBackupVaultList();
   showSaveToast("BACKUP SNAPSHOT DELETED");
+}
+
+function clearAllBackups() {
+  const backups = getSavedBackups();
+  if (backups.length === 0) {
+    showSaveToast("NO BACKUPS TO CLEAR");
+    return;
+  }
+  if (!confirm(`Are you sure you want to clear all ${backups.length} saved backup(s)? This action cannot be undone.`)) {
+    return;
+  }
+  persistBackups([]);
+  localStorage.removeItem('reddiz_backup');
+  renderBackupVaultList();
+  showSaveToast("ALL LOCAL BACKUPS CLEARED");
+}
+
+function startNewSessionAndClearAll() {
+  const totalImages = state.images ? state.images.length : 0;
+  const backups = getSavedBackups();
+  const backupCount = backups.length;
+
+  const msg = totalImages > 0 || backupCount > 0
+    ? `⚠️ START NEW SESSION?\n\nThis will completely delete your current queue (${totalImages} images), all annotations/boxes, and all ${backupCount} saved local backup(s).\n\nAre you sure you want to proceed?`
+    : `Start a brand new session and reset all queues?`;
+
+  if (!confirm(msg)) {
+    return;
+  }
+
+  // Abort any ongoing fetch stream
+  if (activeFetchAbortController) {
+    activeFetchAbortController.abort();
+    activeFetchAbortController = null;
+  }
+
+  // Clear state
+  state.images = [];
+  state.annotations = {};
+  state.subreddits = [];
+  state.currentIndex = -1;
+  state.lastAnnotation = null;
+  state.currentSubredditQuery = '';
+
+  // Clear all saved storage
+  persistBackups([]);
+  localStorage.removeItem('reddiz_backup');
+  localStorage.removeItem(BACKUP_STORAGE_KEY);
+
+  // Reset stage & views
+  if (typeof clearStageForEmptyQueue === 'function') {
+    clearStageForEmptyQueue();
+  }
+  if (typeof renderFilmstrip === 'function') {
+    renderFilmstrip();
+  }
+  if (typeof updateProgress === 'function') {
+    updateProgress();
+  }
+  if (typeof updateStatusBadge === 'function') {
+    updateStatusBadge();
+  }
+
+  // Clear search input
+  if (inputSubreddit) {
+    inputSubreddit.value = '';
+    inputSubreddit.focus();
+  }
+
+  // Re-render vault list
+  renderBackupVaultList();
+
+  // Close vault modal if open
+  closeBackupVaultModal();
+
+  showSaveToast("✨ NEW SESSION STARTED • ALL DATA & BACKUPS CLEARED");
 }
 
 function openBackupVaultModal() {
@@ -2232,9 +2733,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnSaveBackup = document.getElementById('btn-save-backup');
   const btnSyncLocal = document.getElementById('btn-sync-local');
   if (btnSaveBackup) {
-    btnSaveBackup.addEventListener('click', saveCurrentSessionBackup);
+    btnSaveBackup.addEventListener('click', () => saveCurrentSessionBackup(false));
   } else if (btnSyncLocal) {
-    btnSyncLocal.addEventListener('click', saveCurrentSessionBackup);
+    btnSyncLocal.addEventListener('click', () => saveCurrentSessionBackup(false));
+  }
+
+  // Wire New Session button
+  const btnNewSession = document.getElementById('btn-new-session');
+  if (btnNewSession) {
+    btnNewSession.addEventListener('click', startNewSessionAndClearAll);
   }
 
   // Wire Load Backup button
@@ -2247,17 +2754,25 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnCloseBackupVault = document.getElementById('btn-close-backup-vault');
   const btnCloseBackupVaultBottom = document.getElementById('btn-close-backup-vault-bottom');
   const btnVaultSaveNew = document.getElementById('btn-vault-save-new');
+  const btnClearAllBackups = document.getElementById('btn-clear-all-backups');
   const vaultModal = document.getElementById('backup-vault-modal');
 
   if (btnCloseBackupVault) btnCloseBackupVault.addEventListener('click', closeBackupVaultModal);
   if (btnCloseBackupVaultBottom) btnCloseBackupVaultBottom.addEventListener('click', closeBackupVaultModal);
-  if (btnVaultSaveNew) btnVaultSaveNew.addEventListener('click', saveCurrentSessionBackup);
+  if (btnVaultSaveNew) btnVaultSaveNew.addEventListener('click', () => saveCurrentSessionBackup(false));
+  if (btnClearAllBackups) btnClearAllBackups.addEventListener('click', clearAllBackups);
 
   if (vaultModal) {
     vaultModal.addEventListener('click', (e) => {
       if (e.target === vaultModal) closeBackupVaultModal();
     });
   }
+
+  // Initialize auto-backup interval scheduler
+  initAutoBackupSchedule();
+
+  // Automatically restore latest backup on site load/refresh
+  restoreLatestBackupOnBoot();
 
   // Sync Fetch & Upload Button widths with Buy Me a Coffee & Author cells
   function syncFetchButtonWidth() {

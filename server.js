@@ -418,6 +418,85 @@ Provide only the dense, hyper-detailed, pixel-level descriptive prompt without c
     }
   }
 
+  // 1b. API: Real-time streaming fetch with abort/stop capability (Server-Sent Events)
+  if (pathname === '/api/stream-subreddits') {
+    const subredditQuery = parsedUrl.query.subreddit || '';
+    const sort = parsedUrl.query.sort || 'hot';
+    const limit = parseInt(parsedUrl.query.limit, 10) || 100;
+
+    if (!subredditQuery.trim()) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Please enter a subreddit name to search.' }));
+    }
+
+    const subs = subredditQuery
+      .split(/[,+;\s]+/)
+      .map(s => s.trim().replace(/^r\//, ''))
+      .filter(Boolean);
+
+    if (subs.length === 0) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Please enter at least one subreddit name.' }));
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+
+    let clientDisconnected = false;
+    req.on('close', () => {
+      clientDisconnected = true;
+    });
+
+    const sendEvent = (event, data) => {
+      if (clientDisconnected || res.writableEnded) return;
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const seenUrls = new Set();
+    let totalSent = 0;
+
+    (async () => {
+      for (let i = 0; i < subs.length; i++) {
+        if (clientDisconnected) break;
+        const sub = subs[i];
+        sendEvent('sub_start', { subreddit: sub, index: i, totalSubs: subs.length });
+
+        if (i > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+        if (clientDisconnected) break;
+
+        try {
+          const xml = await fetchSingleSubredditRss(sub, sort, limit);
+          const items = parseRssImages(xml, sub);
+          const freshItems = [];
+          for (const itm of items) {
+            if (!seenUrls.has(itm.originalUrl)) {
+              seenUrls.add(itm.originalUrl);
+              freshItems.push(itm);
+            }
+          }
+          totalSent += freshItems.length;
+          sendEvent('sub_items', { subreddit: sub, items: freshItems, subCount: freshItems.length, totalSoFar: totalSent });
+        } catch (err) {
+          sendEvent('sub_error', { subreddit: sub, message: err.message });
+        }
+      }
+
+      sendEvent('complete', { totalImages: totalSent, subreddits: subs });
+      if (!res.writableEnded) res.end();
+    })().catch(err => {
+      sendEvent('fatal_error', { message: err.message });
+      if (!res.writableEnded) res.end();
+    });
+
+    return;
+  }
+
   // 2. API: Image Proxy
   if (pathname === '/api/proxy-image') {
     let targetUrl = parsedUrl.query.url;

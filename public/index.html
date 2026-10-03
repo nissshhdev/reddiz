@@ -61,10 +61,6 @@
       </div>
 
       <div class="header-status-cells">
-        <div class="status-cell">
-          <span class="status-label">PROGRESS</span>
-          <span class="status-val" id="header-progress-count">0/0 ANNOTATED</span>
-        </div>
         <div class="warning-cell">
           <div class="warning-text">
             <svg class="warning-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
@@ -102,6 +98,22 @@
               <polyline points="9 14 12 11 15 14" />
             </svg>
             <span>LOAD</span>
+          </button>
+          <div class="auto-backup-wrap" title="Automatic Session Backup Interval">
+            <span class="auto-backup-label">AUTO</span>
+            <select id="select-auto-backup-interval" class="select-auto-backup" aria-label="Auto-backup interval">
+              <option value="off">OFF</option>
+              <option value="1">1M</option>
+              <option value="2">2M</option>
+              <option value="5" selected>5M</option>
+              <option value="10">10M</option>
+              <option value="15">15M</option>
+            </select>
+          </div>
+          <button id="btn-new-session" type="button" class="reddiz-btn-red"
+            title="Start fresh new session and delete all current session data & backups">
+            <span class="material-symbols-rounded" style="font-size: 13px;">restart_alt</span>
+            <span>NEW SESSION</span>
           </button>
         </div>
         <div class="download-cell">
@@ -148,6 +160,11 @@
           <span id="fetch-spinner"
             style="display: none; width: 13px; height: 13px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="fetch-icon">FETCH MEDIA</span>
+        </button>
+        <button id="btn-stop-fetch" type="button" class="stop-fetch-btn" style="display: none;"
+          title="Stop fetching further images and immediately load only medias fetched so far">
+          <span class="material-symbols-rounded" style="font-size: 13px;">stop_circle</span>
+          <span>STOP &amp; LOAD</span>
         </button>
         <button id="btn-open-upload" type="button" class="upload-btn"
           title="Manually upload images via direct URL or local device files">
@@ -224,8 +241,12 @@
             <span class="material-symbols-rounded" style="font-size: 14px;">download</span>
           </button>
           <button id="btn-quick-delete-stage" class="stage-quick-delete-btn"
-            title="Delete current image completely from queue (Delete / Backspace)">
+            title="Delete current image from queue (Delete / Backspace)">
             <span class="material-symbols-rounded" style="font-size: 14px;">delete</span>
+          </button>
+          <button id="btn-clear-board-all" class="stage-clear-board-btn"
+            title="Clear all images from the board / queue">
+            <span class="material-symbols-rounded" style="font-size: 14px;">delete_sweep</span>
           </button>
         </div>
 
@@ -385,9 +406,15 @@
       <!-- Row 00: Dataset Completion -->
       <div class="editorial-row row-completion">
         <div class="row-index-letter">00</div>
-        <div class="row-content-block" style="padding: 10px 16px;">
+        <div class="row-content-block" style="padding: 6px 14px;">
           <div class="completion-bar-inner">
-            <span>DATASET COMPLETION</span>
+            <div class="completion-left-cluster">
+              <span class="completion-title">DATASET COMPLETION</span>
+              <div class="status-cell status-cell-completion">
+                <span class="status-label">PROGRESS</span>
+                <span class="status-val" id="header-progress-count">0/0 ANNOTATED</span>
+              </div>
+            </div>
             <strong id="footer-progress-pct">0%</strong>
           </div>
         </div>
@@ -1025,14 +1052,27 @@
               Snapshots include timestamps, image counts, annotations, and bounding boxes.
             </p>
           </div>
-          <button id="btn-vault-save-new" type="button" class="reddiz-btn-blue"
-            style="padding: 8px 16px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-              <polyline points="17 21 17 13 7 13 7 21" />
-            </svg>
-            <span>+ SNAPSHOT CURRENT SESSION</span>
-          </button>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px; background: #ffffff; border: 1.5px solid var(--swiss-black); padding: 5px 10px; box-shadow: 1px 1px 0 #000;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 0.72rem; font-weight: 700; color: var(--swiss-black);">AUTO-BACKUP:</span>
+              <select id="select-modal-auto-backup" class="select-auto-backup" style="height: 22px; font-size: 0.72rem;" aria-label="Modal Auto Backup Interval">
+                <option value="off">DISABLED</option>
+                <option value="1">EVERY 1 MIN</option>
+                <option value="2">EVERY 2 MIN</option>
+                <option value="5" selected>EVERY 5 MIN</option>
+                <option value="10">EVERY 10 MIN</option>
+                <option value="15">EVERY 15 MIN</option>
+              </select>
+            </div>
+            <button id="btn-vault-save-new" type="button" class="reddiz-btn-blue"
+              style="padding: 8px 16px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+              </svg>
+              <span>+ SNAPSHOT CURRENT SESSION</span>
+            </button>
+          </div>
         </div>
 
         <div id="backup-vault-list" class="backup-vault-list" style="display: flex; flex-direction: column; gap: 14px;">
@@ -1041,15 +1081,22 @@
       </div>
 
       <div class="modal-footer-pad"
-        style="padding: 14px 20px; border-top: 2px solid var(--swiss-black); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+        style="padding: 12px 20px; border-top: 2px solid var(--swiss-black); display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-wrap: wrap; gap: 10px;">
         <span id="vault-summary-text"
           style="font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--swiss-text-dim);">
           0 SAVED BACKUPS
         </span>
-        <button id="btn-close-backup-vault-bottom" type="button" class="footer-btn btn-ignore"
-          style="padding: 6px 18px; font-size: 0.82rem;">
-          CLOSE
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="btn-clear-all-backups" type="button" class="footer-btn btn-delete"
+            style="padding: 6px 14px; font-size: 0.75rem;">
+            <span class="material-symbols-rounded" style="font-size: 14px;">delete_sweep</span>
+            CLEAR ALL BACKUPS
+          </button>
+          <button id="btn-close-backup-vault-bottom" type="button" class="footer-btn btn-ignore"
+            style="padding: 6px 16px; font-size: 0.75rem;">
+            CLOSE
+          </button>
+        </div>
       </div>
     </div>
   </div>
