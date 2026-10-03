@@ -842,6 +842,14 @@ function loadImage(index) {
   activeImage.src = item.proxyUrl;
 
   activeImage.onload = () => {
+    // Dynamically show actual dimensions
+    const nw = activeImage.naturalWidth;
+    const nh = activeImage.naturalHeight;
+    const cropTag = document.getElementById('crop-tag') || document.querySelector('.crop-tag');
+    if (cropTag) {
+      cropTag.textContent = `[${nw}×${nh}]`;
+    }
+
     resizeCanvasToImage();
 
     // Check if this image already has annotations
@@ -854,8 +862,8 @@ function loadImage(index) {
           bboxes: [],
           isAnnotated: false,
           isIgnored: false,
-          imageWidth: activeImage.naturalWidth,
-          imageHeight: activeImage.naturalHeight
+          imageWidth: nw,
+          imageHeight: nh
         };
         inheritedPill.style.display = 'inline-block';
       } else {
@@ -865,8 +873,8 @@ function loadImage(index) {
           bboxes: [],
           isAnnotated: false,
           isIgnored: false,
-          imageWidth: activeImage.naturalWidth,
-          imageHeight: activeImage.naturalHeight
+          imageWidth: nw,
+          imageHeight: nh
         };
         inheritedPill.style.display = 'none';
       }

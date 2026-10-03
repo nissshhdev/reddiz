@@ -219,7 +219,7 @@
         <div class="canvas-index-stamp">
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
-          <span class="crop-tag">[9:16 CROP]</span>
+          <span class="crop-tag" id="crop-tag">[ORIGINAL RES]</span>
           <button id="btn-quick-download-stage" class="stage-quick-action-btn" title="Download this image directly">
             <span class="material-symbols-rounded" style="font-size: 14px;">download</span>
           </button>
@@ -234,8 +234,8 @@
           &larr;
         </button>
 
-        <!-- 9:16 Center-Cropped Viewport Box -->
-        <div class="stage-wrapper aspect-9-16" id="stage-wrapper">
+        <!-- Dynamic Uncropped Viewport Box -->
+        <div class="stage-wrapper" id="stage-wrapper">
           <!-- Fluid Bi-directional AI Laser Scanning Shroud -->
           <div class="ai-scan-shroud" id="ai-scan-shroud">
             <div class="ai-scan-laser"></div>

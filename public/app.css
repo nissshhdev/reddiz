@@ -657,10 +657,10 @@ body {
 .stage-nav-arrow.prev { left: 8px; }
 .stage-nav-arrow.next { right: 8px; }
 
-/* 9:16 Center-Cropped Viewport Box */
+/* Dynamic Uncropped Preview Viewport Box */
 .stage-wrapper {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   user-select: none;
@@ -668,18 +668,19 @@ body {
   box-shadow: 6px 6px 0px rgba(0, 0, 0, 1);
   background: #000;
   overflow: hidden;
-  aspect-ratio: 9 / 16;
-  height: calc(100vh - 90px);
   max-height: calc(100vh - 90px);
+  max-width: calc(100% - 70px);
   width: auto;
+  height: auto;
 }
 
 .stage-wrapper img#active-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
   display: block;
+  max-height: calc(100vh - 90px);
+  max-width: calc(100% - 70px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 #bbox-canvas {
@@ -2778,7 +2779,7 @@ body {
 }
 
 .aspect-9-16 {
-  aspect-ratio: 9 / 16;
+  /* Dynamic resolution - no forced 9:16 crop */
 }
 
 /* Save feedback notice banner */
