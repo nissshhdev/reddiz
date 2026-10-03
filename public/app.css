@@ -444,6 +444,58 @@ body {
   text-shadow: 0 0 3px #000;
 }
 
+.vertical-gallery-strip .thumb-cell .thumb-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  z-index: 10;
+}
+
+.vertical-gallery-strip .thumb-cell:hover .thumb-remove-btn {
+  opacity: 1;
+}
+
+.vertical-gallery-strip .thumb-cell .thumb-remove-btn:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.stage-quick-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--swiss-text-dim);
+  border: none;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 8px;
+  transition: color 0.15s ease, transform 0.15s ease;
+  outline: none;
+  vertical-align: middle;
+}
+
+.stage-quick-delete-btn:hover {
+  color: #d32f2f;
+  transform: scale(1.15);
+}
+
 /* COLUMN 2: 9:16 CENTER-CROPPED STAGE SECTION */
 .stage-section {
   flex: 1;
@@ -874,13 +926,25 @@ body {
 }
 
 .btn-ignore {
-  flex: 1;
+  flex: 0.9;
+  background: var(--swiss-white);
+  color: #555555;
+  border-color: #555555;
+}
+
+.btn-ignore:hover {
+  background: #555555;
+  color: #ffffff;
+}
+
+.btn-delete {
+  flex: 0.9;
   background: var(--swiss-white);
   color: #d32f2f;
   border-color: #d32f2f;
 }
 
-.btn-ignore:hover {
+.btn-delete:hover {
   background: #d32f2f;
   color: #ffffff;
 }
@@ -892,7 +956,9 @@ body {
 }
 
 .btn-save:hover {
-  background: #333;
+  background: var(--swiss-highlight);
+  border-color: var(--swiss-highlight);
+  color: var(--swiss-white);
 }
 
 /* ==========================================================================

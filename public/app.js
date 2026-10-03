@@ -55,6 +55,8 @@ const btnPrev = document.getElementById('btn-prev-img');
 const btnNext = document.getElementById('btn-next-img');
 const btnBack = document.getElementById('btn-back');
 const btnIgnore = document.getElementById('btn-ignore-img');
+const btnDeleteImg = document.getElementById('btn-delete-img');
+const btnQuickDeleteStage = document.getElementById('btn-quick-delete-stage');
 const btnSaveNext = document.getElementById('btn-save-next');
 
 const redditPostTitle = document.getElementById('reddit-post-title');
@@ -235,6 +237,8 @@ function setupEventListeners() {
   btnNext.addEventListener('click', () => navigateImage(1));
   btnSaveNext.addEventListener('click', () => saveAndNext());
   if (btnIgnore) btnIgnore.addEventListener('click', () => ignoreAndNext());
+  if (btnDeleteImg) btnDeleteImg.addEventListener('click', () => deleteImageFromQueue(state.currentIndex));
+  if (btnQuickDeleteStage) btnQuickDeleteStage.addEventListener('click', () => deleteImageFromQueue(state.currentIndex));
 
   // Keyboard navigation: UP/DOWN for vertical gallery, LEFT/RIGHT for images, ENTER for save, X for ignore
   window.addEventListener('keydown', (e) => {
@@ -259,8 +263,11 @@ function setupEventListeners() {
       navigateImage(1);
     } else if (e.key === 'Enter') {
       saveAndNext();
-    } else if (e.key === 'x' || e.key === 'X' || e.key === 'Delete') {
+    } else if (e.key === 'x' || e.key === 'X') {
       ignoreAndNext();
+    } else if ((e.key === 'Delete' || e.key === 'Backspace') && (e.shiftKey || e.altKey)) {
+      e.preventDefault();
+      deleteImageFromQueue(state.currentIndex);
     }
   });
 
@@ -1134,11 +1141,22 @@ function renderFilmstrip() {
     const thumb = document.createElement('div');
     thumb.className = `thumb-cell ${idx === state.currentIndex ? 'active' : ''}`;
     thumb.setAttribute('data-index', idx);
-    thumb.innerHTML = `<img src="${item.proxyUrl}" alt="thumb" loading="lazy">`;
-    thumb.addEventListener('click', () => {
+    thumb.innerHTML = `
+      <img src="${item.proxyUrl}" alt="thumb" loading="lazy">
+      <button type="button" class="thumb-remove-btn" title="Delete image from queue" data-delete-idx="${idx}">&times;</button>
+    `;
+    thumb.addEventListener('click', (e) => {
+      if (e.target.closest('.thumb-remove-btn')) return;
       saveCurrentAnnotationState(false);
       loadImage(idx);
     });
+    const removeBtn = thumb.querySelector('.thumb-remove-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteImageFromQueue(idx);
+      });
+    }
     filmstrip.appendChild(thumb);
   });
 }
@@ -1196,6 +1214,75 @@ function ignoreAndNext() {
   }
 }
 
+function clearStageForEmptyQueue() {
+  if (activeImage) {
+    activeImage.src = '';
+    activeImage.style.display = 'none';
+  }
+  if (imagePlaceholder) {
+    imagePlaceholder.style.display = 'flex';
+  }
+  if (bboxCanvas) {
+    const bCtx = bboxCanvas.getContext('2d');
+    if (bCtx) bCtx.clearRect(0, 0, bboxCanvas.width, bboxCanvas.height);
+  }
+  if (imageCounter) imageCounter.textContent = 'INDEX 00 / 00 [9:16 CROP]';
+  if (redditPostTitle) redditPostTitle.textContent = 'No image selected';
+  if (annotationCaption) annotationCaption.value = '';
+  if (tagsContainer) tagsContainer.innerHTML = '';
+  if (bboxList) bboxList.innerHTML = '// NO BOUNDING BOXES DRAWN';
+  if (btnOpenExport) btnOpenExport.disabled = true;
+  if (statusIndicator) {
+    statusIndicator.className = 'status-dot';
+    statusIndicator.style.background = '';
+  }
+  const stageContainer = document.getElementById('stage-container');
+  if (stageContainer) stageContainer.classList.remove('image-ignored');
+}
+
+function deleteImageFromQueue(targetIndex) {
+  if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= state.images.length) return;
+  const deletedItem = state.images[targetIndex];
+  const itemTitle = deletedItem ? (deletedItem.title || 'IMAGE') : 'IMAGE';
+
+  // Remove from arrays
+  state.images.splice(targetIndex, 1);
+  state.annotations.splice(targetIndex, 1);
+
+  // Re-index remaining images
+  state.images.forEach((item, i) => {
+    item.index = i;
+  });
+
+  // If queue is completely empty
+  if (state.images.length === 0) {
+    state.currentIndex = -1;
+    renderFilmstrip();
+    clearStageForEmptyQueue();
+    updateProgress();
+    showSaveToast("IMAGE DELETED (QUEUE IS NOW EMPTY)");
+    return;
+  }
+
+  // Adjust active index
+  if (targetIndex === state.currentIndex) {
+    const nextIdx = Math.min(targetIndex, state.images.length - 1);
+    state.currentIndex = nextIdx;
+    renderFilmstrip();
+    loadImage(nextIdx);
+  } else if (targetIndex < state.currentIndex) {
+    state.currentIndex--;
+    renderFilmstrip();
+    updateStatusBadge();
+  } else {
+    renderFilmstrip();
+    updateStatusBadge();
+  }
+
+  updateProgress();
+  showSaveToast(`DELETED: ${itemTitle.substring(0, 20).toUpperCase()}...`);
+}
+
 function navigateImage(delta) {
   saveCurrentAnnotationState(false);
   const nextIdx = state.currentIndex + delta;
@@ -1229,15 +1316,20 @@ function updateStatusBadge() {
 
 function updateProgress() {
   const total = state.images.length;
-  if (total === 0) return;
+  if (total === 0) {
+    if (headerProgressCount) headerProgressCount.textContent = '0/0 ANNOTATED';
+    if (footerProgressPct) footerProgressPct.textContent = '0%';
+    if (btnOpenExport) btnOpenExport.disabled = true;
+    return;
+  }
 
-  const count = Object.values(state.annotations).filter(a => a.isAnnotated && !a.isIgnored).length;
+  const count = Object.values(state.annotations).filter(a => a && a.isAnnotated && !a.isIgnored).length;
   const pct = Math.round((count / total) * 100);
 
-  headerProgressCount.textContent = `${count}/${total} ANNOTATED`;
-  footerProgressPct.textContent = `${pct}%`;
+  if (headerProgressCount) headerProgressCount.textContent = `${count}/${total} ANNOTATED`;
+  if (footerProgressPct) footerProgressPct.textContent = `${pct}%`;
 
-  btnOpenExport.disabled = count === 0;
+  if (btnOpenExport) btnOpenExport.disabled = count === 0;
 }
 
 // Export Dataset Modal & Download
@@ -1754,3 +1846,4 @@ async function generateAiPrompt(apiKey, model, provider) {
     });
   }
 })();
+

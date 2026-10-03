@@ -1,4 +1,4 @@
-﻿# REDDIZ — Vision Dataset Builder & Reddit Annotator
+# REDDIZ — Vision Dataset Builder & Reddit Annotator
 
 A lightweight, zero-dependency annotation tool I built to pull image feeds directly from Reddit (including NSFW and multi-subreddit searches), crop them to 9:16 vertical preview framing, annotate them quickly, and export clean training datasets for computer vision models, LoRAs, and vision-language models.
 
@@ -67,13 +67,19 @@ Type any subreddit into the search bar at the top, select your sort preference (
 RedditDataTrainer/
 ├── server.js          # Native HTTP server, Reddit RSS parser, image proxy & ZIP packager
 ├── simple-zip.js      # Zero-dependency streaming Deflate ZIP generator (Node zlib)
-├── user-agents.js     # User-Agent rotation helper
+├── gemini.js          # Google Gemini Vision integration
+├── openai.js          # OpenAI GPT-4o Vision integration
+├── claude.js          # Anthropic Claude 3.5 Sonnet Vision integration
+├── groq.js            # Groq Llama 3.2 Vision integration
+├── huggingface.js     # Hugging Face Inference API integration
+├── vercel.json        # Vercel serverless deployment config
 ├── package.json       # Project manifest
 ├── README.md          # Project documentation
 └── public/
     ├── index.html     # Editorial 3-column UI layout
-    ├── app.css        # Swiss modernist brutalist styling & typography
-    └── app.js         # Canvas bounding boxes, state inheritance, and hotkeys
+    ├── app.css        # Modern typography & brutalist styling
+    ├── app.js         # Canvas bounding boxes, state inheritance, and hotkeys
+    └── favicon.svg    # App icon
 ```
 
 ---

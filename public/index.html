@@ -167,6 +167,9 @@
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
           <span class="crop-tag">[9:16 CROP]</span>
+          <button id="btn-quick-delete-stage" class="stage-quick-delete-btn" title="Delete current image completely from queue (Shift+Delete)">
+            <span class="material-symbols-rounded" style="font-size: 14px;">delete</span>
+          </button>
         </div>
 
         <!-- Left Nav Arrow -->
@@ -327,9 +330,13 @@
         <button id="btn-back" class="footer-btn btn-prev" title="Previous Image (Up Arrow / Left Arrow)">
           &mdash; PREV
         </button>
-        <button id="btn-ignore-img" class="footer-btn btn-ignore" title="Ignore image from training dataset (X or Delete)">
+        <button id="btn-ignore-img" class="footer-btn btn-ignore" title="Ignore image from training dataset (X)">
           <span class="material-symbols-rounded" style="font-size: 15px;">block</span>
           IGNORE
+        </button>
+        <button id="btn-delete-img" class="footer-btn btn-delete" title="Delete image completely from queue (Shift+Delete / Shift+Backspace)">
+          <span class="material-symbols-rounded" style="font-size: 15px;">delete</span>
+          DELETE
         </button>
         <button id="btn-save-next" class="footer-btn btn-save" title="Save &amp; Next (Down Arrow / Enter)">
           SAVE &amp; NEXT &rarr;
