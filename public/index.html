@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -15,13 +15,30 @@
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
+  <!-- Super Smooth Initial Page Boot Animation -->
+  <div class="reddiz-page-boot-curtain" id="page-boot-curtain">
+    <div class="boot-logo-container">
+      <svg class="brand-icon-svg" viewBox="0 0 40 40" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="36" height="36" fill="#000000" rx="3" />
+        <rect x="7" y="7" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="2" />
+        <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-width="1.6" stroke-dasharray="2.5 1.5" />
+        <circle cx="20" cy="20" r="2.2" fill="#ff3300" />
+        <path d="M20 14v2M20 24v2M14 20h2M24 20h2" stroke="#ff3300" stroke-width="1.2" stroke-linecap="square" />
+      </svg>
+      <h1 class="boot-title">REDDIZ</h1>
+      <span class="boot-sub">// INITIALIZING DATASET WORKSTATION</span>
+      <div class="boot-progress-line">
+        <div class="boot-progress-fill"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Top Header matching user screenshot exactly -->
-  <header class="reddiz-header">
+    <header class="reddiz-header">
     <div class="reddiz-header-top">
       <div class="brand-block">
         <div class="brand-logo-wrap">
-          <svg class="brand-icon-svg" viewBox="0 0 40 40" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="brand-icon-svg" viewBox="0 0 40 40" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="2" width="36" height="36" fill="#000000" rx="3" />
             <rect x="7" y="7" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="2" />
             <rect x="14" y="9" width="12" height="22" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-width="1.6" stroke-dasharray="2.5 1.5" />
@@ -35,7 +52,7 @@
 
       <div class="header-status-cells">
         <div class="status-cell">
-          <span class="status-label">Progress</span>
+          <span class="status-label">PROGRESS</span>
           <span class="status-val" id="header-progress-count">0/0 ANNOTATED</span>
         </div>
         <div class="warning-cell">
@@ -43,12 +60,27 @@
             <strong>Warning:</strong> NSFW content are fetched along with non-nsfw content. Discretion is strictly advised.
           </div>
         </div>
+        <div class="settings-cell">
+          <button id="btn-open-ai-settings-top" type="button" class="btn-top-ai-settings" title="Configure AI Vision Models, API Keys & Live Diagnostic Test">
+            <span class="settings-gear-icon">&#9881;</span>
+            <span>AI SETTINGS</span>
+          </button>
+        </div>
         <div class="download-cell">
           <button id="btn-open-export" class="reddiz-btn-black" disabled>
             DONE &amp; DOWNLOAD ZIP
           </button>
         </div>
-        <div class="author-cell">
+        <div class="bmac-cell">
+          <a href="https://buymeacoffee.com/nissshhdevz" target="_blank" rel="noopener noreferrer" class="btn-bmac" title="Support the developer - Buy me a coffee">
+            <svg class="bmac-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M20.216 6.415l-.132-.666c-.119-.597-.383-.883-.804-.883h-14.56c-.421 0-.685.286-.804.883l-.132.666C3.652 7.085 3.5 7.973 3.5 8.878c0 3.824 2.822 6.994 6.559 7.427.674 1.144 1.83 1.954 3.203 2.152l-.634 2.215c-.092.321.14.628.474.628h1.796c.334 0 .566-.307.474-.628l-.634-2.215c1.373-.198 2.529-1.008 3.203-2.152 3.737-.433 6.559-3.603 6.559-7.427 0-.905-.152-1.793-.284-2.463zm-2.216 2.463c0 2.757-2.029 5.018-4.636 5.373-.418-.328-.888-.582-1.4-.738.358-.87.56-1.833.56-2.842V7.866h4.863c.404.757.613 1.62.613 2.512z"/>
+            </svg>
+            <span>BUY ME A COFFEE</span>
+            <span class="bmac-arrow">&nearr;</span>
+          </a>
+        </div>
+        <div class="author-cell" id="btn-author-guide" style="cursor:pointer;" title="Click for User Guide & API Key Direct Links">
           &copy; &lt; nissshh / &gt;
         </div>
       </div>
@@ -69,9 +101,12 @@
         </select>
       </div>
       <div class="query-btn-wrapper">
-        <button id="btn-fetch" class="fetch-btn">
-          <span id="fetch-spinner" style="display: none; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
+        <button id="btn-fetch" class="fetch-btn" title="Fetch images from the entered subreddit(s)">
+          <span id="fetch-spinner" style="display: none; width: 13px; height: 13px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;"></span>
           <span id="fetch-icon">FETCH MEDIA</span>
+        </button>
+        <button id="btn-open-upload" type="button" class="upload-btn" title="Manually upload images via direct URL or local device files">
+          <span>&#8679; UPLOAD MEDIA</span>
         </button>
       </div>
     </div>
@@ -87,8 +122,47 @@
     <!-- Center Column: 9:16 Center Cropped Stage -->
     <section class="stage-section">
       <div class="canvas-viewport-box" id="stage-container">
-        
-        <!-- Index Counter Badge -->
+        <!-- Authentic Swiss Brutalist Spider & Web Stage Loading Overlay -->
+        <div class="stage-loading-overlay" id="stage-loading-overlay">
+          <div class="stage-loading-content">
+            <div class="spider-web-stage">
+              <div class="spider-silk-thread"></div>
+              <!-- Progressive Geometric Spider Web SVG -->
+              <svg class="web-svg-canvas" viewBox="0 0 140 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Radial Web Spokes -->
+                <line x1="70" y1="5" x2="70" y2="105" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="10" y1="20" x2="130" y2="90" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="10" y1="90" x2="130" y2="20" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="5" y1="55" x2="135" y2="55" stroke="#222" stroke-width="1.2" stroke-dasharray="2 2" />
+                <!-- Concentric Web Strands -->
+                <path id="web-ring-1" class="web-strand" d="M70,30 L95,40 L105,55 L95,70 L70,80 L45,70 L35,55 L45,40 Z" stroke="#111" stroke-width="1.5" />
+                <path id="web-ring-2" class="web-strand" d="M70,20 L105,32 L118,55 L105,78 L70,90 L35,78 L22,55 L35,32 Z" stroke="#111" stroke-width="1.6" />
+                <path id="web-ring-3" class="web-strand" d="M70,10 L118,25 L130,55 L118,85 L70,100 L22,85 L10,55 L22,25 Z" stroke="#ff3300" stroke-width="1.8" />
+              </svg>
+              <!-- Precision Geometric Spider Silhouette -->
+              <div class="spider-sil-wrap">
+                <svg class="spider-svg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Legs -->
+                  <path d="M12 14 Q6 8 3 13 M10 16 Q3 16 2 21 M10 18 Q4 22 5 28 M12 20 Q7 27 10 32" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                  <path d="M22 14 Q28 8 31 13 M24 16 Q31 16 32 21 M24 18 Q30 22 29 28 M22 20 Q27 27 24 32" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                  <!-- Abdomen (Geometric) -->
+                  <ellipse cx="17" cy="20" rx="4.5" ry="6" fill="#000" />
+                  <!-- Cephalothorax -->
+                  <circle cx="17" cy="13" r="3.2" fill="#000" />
+                  <!-- Swiss Red Accent Marking -->
+                  <circle cx="17" cy="20" r="1.6" fill="#ff3300" />
+                </svg>
+              </div>
+            </div>
+            <div class="stage-loading-status-row">
+              <span id="stage-loading-text">WEAVING DATASET...</span>
+              <span class="stage-loading-pct" id="stage-loading-pct">0%</span>
+            </div>
+            <div class="stage-loading-meter">
+              <div class="stage-loading-meter-fill" id="stage-loading-meter-fill"></div>
+            </div>
+          </div>
+        </div>
         <div class="canvas-index-stamp">
           <div class="status-dot" id="status-indicator"></div>
           <span id="image-counter">INDEX 00 / 00</span>
@@ -102,6 +176,15 @@
 
         <!-- 9:16 Center-Cropped Viewport Box -->
         <div class="stage-wrapper aspect-9-16" id="stage-wrapper">
+          <!-- Fluid Bi-directional AI Laser Scanning Shroud -->
+          <div class="ai-scan-shroud" id="ai-scan-shroud">
+            <div class="ai-scan-laser"></div>
+            <div class="ai-scan-curtain"></div>
+            <div class="ai-scan-hud-badge">
+              <span class="ai-scan-dot"></span>
+              <span id="ai-scan-hud-text">AI VISION ANALYZING...</span>
+            </div>
+          </div>
           <img id="active-image" src="" alt="Active Canvas Image" style="display: none;">
           <canvas id="bbox-canvas"></canvas>
           
@@ -117,6 +200,9 @@
         </button>
       </div>
     </section>
+
+    <!-- Draggable Resizer Bar -->
+    <div class="panel-resizer" id="panel-resizer" title="Drag to resize side panel"></div>
 
     <!-- Right Column: Data Entries Side Panel -->
     <aside class="editorial-side-panel">
@@ -137,14 +223,48 @@
         <div class="row-index-letter">b )</div>
         <div class="row-content-block">
           <div class="row-title-label">
-            <span>IMAGE CAPTION &amp; PROMPT</span>
-            <span style="display:flex; align-items:center; gap:6px;">
-              <button id="btn-ai-prompt" type="button" class="btn-ai-generate" title="Generate detailed visual caption with Gemini AI">
-                <span id="ai-spinner" style="display:none; width:10px; height:10px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:4px;"></span>
-                <span>✨ AI PROMPT</span>
+            <span class="caption-label-text">IMAGE CAPTION &amp; PROMPT</span>
+            <div class="caption-ai-action-cluster">
+              <select id="inline-model-select" class="inline-model-selector" title="Select active Vision AI Model">
+  <optgroup label="GOOGLE GEMINI (3.X &amp; LIGHTWEIGHT)">
+    <option value="gemini:gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; FAST &#9733;</option>
+    <option value="gemini:gemini-3.5-flash">GEMINI 3.5 FLASH</option>
+    <option value="gemini:gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE (LGT)</option>
+    <option value="gemini:gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE (LGT)</option>
+  </optgroup>
+  <optgroup label="OPENAI (LATEST &amp; MINI)">
+    <option value="openai:gpt-4o">GPT-4O &mdash; LATEST</option>
+    <option value="openai:gpt-4o-mini">GPT-4O MINI &mdash; LIGHTWEIGHT</option>
+  </optgroup>
+  <optgroup label="ANTHROPIC CLAUDE (3.5)">
+    <option value="claude:claude-3-5-sonnet-20241022">CLAUDE 3.5 SONNET &mdash; LATEST</option>
+    <option value="claude:claude-3-5-haiku-20241022">CLAUDE 3.5 HAIKU &mdash; LIGHTWEIGHT</option>
+  </optgroup>
+  <optgroup label="GROQ (LLAMA 3.2 VISION)">
+    <option value="groq:llama-3.2-11b-vision-preview">LLAMA 3.2 11B &mdash; LIGHTWEIGHT</option>
+    <option value="groq:llama-3.2-90b-vision-preview">LLAMA 3.2 90B &mdash; LATEST</option>
+  </optgroup>
+  <optgroup label="HUGGING FACE (LIGHTWEIGHT VISION)">
+    <option value="huggingface:Salesforce/blip-image-captioning-large">BLIP LARGE &mdash; FAST CAPTION</option>
+    <option value="huggingface:nlpconnect/vit-gpt2-image-captioning">VIT-GPT2 &mdash; LIGHTWEIGHT</option>
+    <option value="huggingface:facebook/detr-resnet-50">DETR RESNET-50 &mdash; OBJECTS</option>
+  </optgroup>
+</select>
+              <button id="btn-ai-prompt" type="button" class="btn-ai-generate" title="Run multimodal prompt with selected model">
+                <span id="ai-spinner" style="display:none; width:9px; height:9px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:4px;"></span>
+                <span id="ai-btn-label">&#10022; PROMPT</span>
               </button>
-              <button id="btn-clear-caption" type="button" class="btn-micro-clear" title="Clear prompt text">&times; CLEAR</button>
-            </span>
+              <button id="btn-ai-stop" type="button" class="btn-ai-stop" style="display:none;" title="Stop active AI analysis">
+                <span>&#9632; STOP</span>
+              </button>
+              <button id="btn-ai-compare" type="button" class="btn-ai-generate" title="Run multiple AI vision models concurrently and pick the best caption">
+                <span>&#8652; COMPARE</span>
+              </button>
+              <button id="btn-ai-settings-panel" type="button" class="btn-ai-settings-icon" title="Vision API Keys &amp; Model Configuration">
+                <span>&#9881;</span>
+              </button>
+              <button id="btn-clear-caption" type="button" class="btn-micro-clear-cluster" title="Clear prompt text">&times;</button>
+            </div>
           </div>
           <textarea id="annotation-caption" class="ruled-textarea" placeholder="Descriptive caption propagated automatically across images..."></textarea>
         </div>
@@ -219,6 +339,97 @@
   </main>
 
   <!-- Export Dataset Modal -->
+    <!-- MANUAL IMAGE UPLOAD MODAL -->
+  <div class="swiss-modal-scrim" id="upload-modal" style="z-index: 1070;">
+    <div class="swiss-modal-dialog upload-modal-dialog">
+      <!-- Title Bar -->
+      <div class="modal-title-bar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="upload-modal-status-dot"></span>
+          <h2 style="letter-spacing: 0.04em;">MANUAL MEDIA INGESTION</h2>
+        </div>
+        <button id="btn-close-upload-modal" class="modal-close-btn" title="Close dialog">&times;</button>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="upload-tab-bar">
+        <button type="button" id="tab-upload-local" class="upload-tab-btn active-tab">
+          <span>&#128194; LOCAL FILES</span>
+        </button>
+        <button type="button" id="tab-upload-url" class="upload-tab-btn">
+          <span>&#128279; WEB IMAGE LINK</span>
+        </button>
+      </div>
+
+      <!-- Modal Body (Spacious & Scrollable) -->
+      <div class="upload-modal-body">
+        <p class="upload-modal-lead">
+          Import individual images or batches directly into your active annotation session for dataset labeling and multimodal AI prompt analysis.
+        </p>
+
+        <!-- Section: Local Device File Upload -->
+        <div id="section-upload-local" class="upload-section">
+          <div class="upload-dropzone-spacious" id="upload-dropzone">
+            <div class="upload-icon-circle">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>
+            </div>
+            <div class="upload-dropzone-heading">DRAG &amp; DROP IMAGES HERE</div>
+            <div class="upload-dropzone-sub">or click to browse from your device</div>
+            <div class="upload-badge-row">
+              <span class="upload-format-tag">PNG</span>
+              <span class="upload-format-tag">JPG</span>
+              <span class="upload-format-tag">WEBP</span>
+              <span class="upload-format-tag">AVIF</span>
+              <span class="upload-format-tag">MULTI-FILE</span>
+            </div>
+            <input type="file" id="input-local-files" multiple accept="image/*" style="display:none;">
+          </div>
+        </div>
+
+        <!-- Section: URL Upload -->
+        <div id="section-upload-url" class="upload-section" style="display:none;">
+          <div class="upload-url-card">
+            <label class="upload-field-label">DIRECT IMAGE ADDRESS</label>
+            <div class="upload-url-input-row">
+              <input type="url" id="input-upload-url" placeholder="https://i.redd.it/example.jpg or https://images.unsplash.com/..." class="upload-swiss-input">
+              <button type="button" id="btn-add-url-preview" class="upload-btn-load">
+                <span>+ ADD TO QUEUE</span>
+              </button>
+            </div>
+            <div class="upload-url-hint-box">
+              <span>&#9432;</span>
+              <span>Accepts direct image links from Reddit, Imgur, Unsplash, or any public HTTPS server.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Preview Queue -->
+        <div class="upload-preview-panel" id="upload-preview-container" style="display:none;">
+          <div class="upload-preview-bar">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="upload-queue-badge" id="upload-queue-count">0</span>
+              <span class="upload-preview-title">STAGED FOR INGESTION</span>
+            </div>
+            <button type="button" id="btn-clear-upload-queue" class="upload-clear-link">CLEAR ALL</button>
+          </div>
+          <div class="upload-preview-grid-airy" id="upload-preview-grid">
+            <!-- Dynamic Cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-pad" style="border-top: 2px solid var(--swiss-black); background: #fbfbf9; padding: 14px 24px;">
+        <span class="ai-footer-note">&#128274; RETAINED IN ACTIVE SESSION ONLY</span>
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-cancel-upload" type="button" class="btn-ai-modal-cancel">CANCEL</button>
+          <button id="btn-commit-upload" type="button" class="btn-ai-modal-save" style="background: var(--swiss-black);" disabled>+ COMMIT TO SESSION</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="swiss-modal-scrim" id="export-modal">
     <div class="swiss-modal-dialog">
       <div class="modal-title-bar">
@@ -273,26 +484,379 @@
     }
   </style>
 
-  <!-- Gemini API Key Modal -->
+  <!-- AI Vision Configuration Modal - REDDIZ Authentic Swiss Aesthetic -->
   <div class="swiss-modal-scrim" id="gemini-key-modal">
-    <div class="swiss-modal-dialog" style="max-width: 480px;">
+    <div class="swiss-modal-dialog">
+      <!-- Title Bar -->
       <div class="modal-title-bar">
-        <h2>GEMINI API CONFIGURATION</h2>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="display:inline-block;width:10px;height:10px;background:#ff3300;box-shadow:0 0 8px #ff3300;flex-shrink:0;"></span>
+          <h2 id="ai-modal-heading">&#9881; AI VISION SETTINGS</h2>
+        </div>
         <button id="btn-close-gemini-modal" class="modal-close-btn">&times;</button>
       </div>
+
+      <!-- Provider Tabs -->
+      <div class="ai-modal-tab-bar">
+        <button type="button" id="tab-provider-gemini" class="ai-provider-tab-btn active-tab">GEMINI</button>
+        <button type="button" id="tab-provider-openai" class="ai-provider-tab-btn">OPENAI</button>
+        <button type="button" id="tab-provider-claude" class="ai-provider-tab-btn">CLAUDE</button>
+        <button type="button" id="tab-provider-groq" class="ai-provider-tab-btn">GROQ</button>
+        <button type="button" id="tab-provider-huggingface" class="ai-provider-tab-btn">HUGGING FACE</button>
+      </div>
+
+      <!-- Modal Body -->
       <div class="modal-body-pad">
-        <p class="modal-subtitle">
-          Enter your Google Gemini API key to enable AI-assisted visual dataset prompting (analyzing face, skin tone, region, realism, dress, jewellery, background, skies, colors, etc.).
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <label style="font-family: 'Space Mono', monospace; font-size: 0.75rem; font-weight: 700;">GEMINI API KEY:</label>
-          <input type="password" id="input-gemini-api-key" class="new-class-input" placeholder="AIzaSy..." style="padding: 8px; font-size: 0.85rem;" autocomplete="off">
-          <span style="font-size: 0.72rem; color: var(--swiss-text-dim);">Keys are saved locally in your browser (localStorage). Never shared.</span>
+        <p class="ai-modal-desc-callout">Configure multimodal AI vision engines to generate descriptive captions covering poses, lighting, subjects, background, and cultural/regional characteristics.</p>
+
+        <!-- GOOGLE GEMINI -->
+        <div id="section-gemini-config">
+          <div class="ai-provider-header-row">
+            <span class="ai-provider-name-badge">GOOGLE GEMINI</span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="ai-get-key-link">GET FREE KEY &nearr;</a>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">API KEY</label>
+            <input type="password" id="input-gemini-api-key" placeholder="AIzaSy..." autocomplete="off" class="ai-swiss-input">
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <label class="ai-field-label">MODEL</label>
+            <select id="select-gemini-model" class="ai-swiss-select">
+                <option value="gemini-3.8-flash" selected>GEMINI 3.8 FLASH &mdash; RECOMMENDED &#9733;</option>
+                <option value="gemini-3.5-flash">GEMINI 3.5 FLASH &mdash; HIGH SPEED</option>
+                <option value="gemini-3.0-flash">GEMINI 3.0 FLASH</option>
+                <option value="gemini-3.8-flash-lite">GEMINI 3.8 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+                <option value="gemini-3.5-flash-lite">GEMINI 3.5 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+                <option value="gemini-3.0-flash-lite">GEMINI 3.0 FLASH-LITE &mdash; LIGHTWEIGHT</option>
+              </select>
+          </div>
+          <p class="ai-swiss-hint">API keys are stored directly in your browser localStorage only.</p>
+        </div>
+
+        <!-- OPENAI CHATGPT -->
+        <div id="section-openai-config" style="display:none;">
+          <div class="ai-provider-header-row">
+            <span class="ai-provider-name-badge">OPENAI VISION</span>
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="ai-get-key-link">GET KEY &nearr;</a>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">API KEY</label>
+            <input type="password" id="input-openai-api-key" placeholder="sk-proj-..." autocomplete="off" class="ai-swiss-input">
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <label class="ai-field-label">MODEL</label>
+            <select id="select-openai-model" class="ai-swiss-select">
+              <option value="gpt-4o" selected>GPT-4O &mdash; LATEST MULTIMODAL FLAGSHIP &#9733;</option>
+              <option value="gpt-4o-mini">GPT-4O MINI &mdash; LIGHTWEIGHT &amp; ULTRA-FAST</option>
+            </select>
+          </div>
+          <p class="ai-swiss-hint">Requires an OpenAI account with active API credits.</p>
+        </div>
+
+        <!-- ANTHROPIC CLAUDE -->
+        <div id="section-claude-config" style="display:none;">
+          <div class="ai-provider-header-row">
+            <span class="ai-provider-name-badge">ANTHROPIC CLAUDE</span>
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="ai-get-key-link">GET KEY &nearr;</a>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">API KEY</label>
+            <input type="password" id="input-claude-api-key" placeholder="sk-ant-api03-..." autocomplete="off" class="ai-swiss-input">
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <label class="ai-field-label">MODEL</label>
+            <select id="select-claude-model" class="ai-swiss-select">
+              <option value="claude-3-5-sonnet-20241022" selected>CLAUDE 3.5 SONNET &mdash; LATEST VISION FLAGSHIP &#9733;</option>
+              <option value="claude-3-5-haiku-20241022">CLAUDE 3.5 HAIKU &mdash; LIGHTWEIGHT &amp; FAST</option>
+            </select>
+          </div>
+          <p class="ai-swiss-hint">Requires Anthropic console credits.</p>
+        </div>
+
+        <!-- GROQ (LLAMA) -->
+        <div id="section-groq-config" style="display:none;">
+          <div class="ai-provider-header-row">
+            <span class="ai-provider-name-badge">GROQ (LLAMA VISION)</span>
+            <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="ai-get-key-link">GET FREE KEY &nearr;</a>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">API KEY</label>
+            <input type="password" id="input-groq-api-key" placeholder="gsk_..." autocomplete="off" class="ai-swiss-input">
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <label class="ai-field-label">MODEL</label>
+            <select id="select-groq-model" class="ai-swiss-select">
+              <option value="llama-3.2-11b-vision-preview" selected>LLAMA 3.2 11B VISION &mdash; LIGHTWEIGHT &amp; ULTRA-FAST &#9733;</option>
+              <option value="llama-3.2-90b-vision-preview">LLAMA 3.2 90B VISION &mdash; LATEST HIGH FIDELITY</option>
+            </select>
+          </div>
+          <p class="ai-swiss-hint">Groq free tier provides fast image inference.</p>
+        </div>
+        <!-- HUGGING FACE VISION -->
+        <div id="section-huggingface-config" style="display:none;">
+          <div class="ai-provider-header-row">
+            <span class="ai-provider-name-badge">HUGGING FACE INFERENCE API</span>
+            <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" class="ai-get-key-link">GET USER TOKEN &nearr;</a>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">USER ACCESS TOKEN (HF_TOKEN)</label>
+            <input type="password" id="input-huggingface-api-key" placeholder="hf_..." autocomplete="off" class="ai-swiss-input">
+          </div>
+          <div style="display:flex;flex-direction:column;margin-bottom:12px;">
+            <label class="ai-field-label">VISION MODEL REPO ID</label>
+            <select id="select-huggingface-model" class="ai-swiss-select">
+              <option value="Salesforce/blip-image-captioning-large" selected>Salesforce/blip-image-captioning-large &mdash; RECOMMENDED &#9733;</option>
+              <option value="nlpconnect/vit-gpt2-image-captioning">nlpconnect/vit-gpt2-image-captioning &mdash; LIGHTWEIGHT</option>
+              <option value="facebook/detr-resnet-50">facebook/detr-resnet-50 &mdash; OBJECT DETECTION</option>
+            </select>
+          </div>
+          <p class="ai-swiss-hint">Hugging Face free serverless inference API. Tokens are stored securely in browser localStorage only.</p>
         </div>
       </div>
+
+      
+        <!-- TEST MODEL PLAYGROUND -->
+        <div class="ai-test-panel" id="ai-test-panel">
+          <div class="ai-test-header">
+            <span class="ai-test-title">&#9889; LIVE MODEL TEST BENCH</span>
+            <span class="ai-test-tag">INSTANT VERIFY</span>
+          </div>
+          <p class="ai-test-desc">Send a diagnostic test request to verify API key authentication, model availability, and response latency.</p>
+          <div class="ai-test-actions">
+            <button type="button" id="btn-test-ai-model" class="btn-ai-test-run">
+              <span id="ai-test-spinner" class="ai-test-spinner" style="display:none;"></span>
+              <span id="ai-test-btn-label">&#9654; TEST ACTIVE MODEL</span>
+            </button>
+            <button type="button" id="btn-test-ai-stop" class="btn-ai-test-stop" style="display:none;" title="Cancel active test request">
+              <span>&#9632; STOP TEST</span>
+            </button>
+            <span id="ai-test-status" class="ai-test-status-badge" style="display:none;">READY</span>
+          </div>
+          <div id="ai-test-result-box" class="ai-test-result-box" style="display:none;">
+            <div class="ai-test-result-meta" id="ai-test-result-meta"></div>
+            <pre class="ai-test-output" id="ai-test-output"></pre>
+          </div>
+        </div>
+
+      <!-- Footer -->
       <div class="modal-footer-pad">
-        <button id="btn-cancel-gemini-key" class="footer-btn btn-prev" style="flex: initial; padding: 8px 16px;">CANCEL</button>
-        <button id="btn-save-gemini-key" class="footer-btn btn-save" style="flex: initial; padding: 8px 20px;">SAVE &amp; GENERATE</button>
+        <span class="ai-footer-note">&#128274; LOCAL BROWSER STORAGE</span>
+        <div style="display:flex;gap:8px;">
+          <button id="btn-cancel-gemini-key" type="button" class="btn-ai-modal-cancel">CANCEL</button>
+          <button id="btn-save-gemini-key" type="button" class="btn-ai-modal-save">SAVE &amp; APPLY</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="swiss-modal-scrim" id="compare-modal" style="z-index: 1060;">
+    <div class="swiss-modal-dialog" style="max-width: 950px; width: 92vw; border: 2px solid #ff3300; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);">
+      <div class="modal-title-bar" style="background: #111; border-bottom: 2px solid #ff3300; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; border-radius: 50%; box-shadow: 0 0 8px #ff3300;"></span>
+          <h2 style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.05em; color: #fff;">
+            MULTI-MODEL AI VISION COMPARISON &amp; SELECTION
+          </h2>
+        </div>
+        <button id="btn-close-compare-modal" class="modal-close-btn" title="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body-pad" style="padding: 16px 20px; background: #0e0e0e; max-height: 80vh; overflow-y: auto;">
+        
+        <!-- Selection Header: checkboxes for active models -->
+        <div style="background: #161616; border: 1px solid #282828; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="font-family: 'Space Mono', monospace; font-size: 0.78rem; color: #fff; letter-spacing: 0.05em;">
+              SELECT MODELS TO RUN CONCURRENTLY:
+            </strong>
+            <button id="btn-execute-comparison" class="footer-btn btn-save" style="flex: initial; padding: 6px 18px; font-size: 0.75rem; background: #ff3300; color: #fff;">
+              <span id="compare-spinner" class="swiss-pulse-spinner" style="display: none; margin-right: 6px;"></span>
+              <span id="compare-btn-text">RUN ALL SELECTED MODELS &rarr;</span>
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;" id="compare-model-checkboxes">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+              <input type="checkbox" id="check-compare-gemini" checked style="accent-color: #ff3300;">
+              <span>Google Gemini 3.8 Flash</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+              <input type="checkbox" id="check-compare-openai" checked style="accent-color: #ff3300;">
+              <span>OpenAI GPT-4o</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+              <input type="checkbox" id="check-compare-claude" checked style="accent-color: #ff3300;">
+              <span>Claude 3.5 Sonnet</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-family: 'Space Mono', monospace; color: #eee; cursor: pointer;">
+              <input type="checkbox" id="check-compare-groq" style="accent-color: #ff3300;">
+              <span>Groq Llama 3.2 11B</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Comparison Cards Grid -->
+        <div id="compare-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+          <!-- Dynamically populated comparison cards -->
+          <div style="background: #141414; border: 1px dashed #333; padding: 24px; text-align: center; color: #777; font-family: 'Space Mono', monospace; font-size: 0.8rem; grid-column: 1 / -1;">
+            Select which models to compare above and click [RUN ALL SELECTED MODELS &rarr;] to generate side-by-side prompt responses.
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer-pad" style="padding: 10px 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: flex-end;">
+        <button id="btn-cancel-compare" class="footer-btn btn-prev" style="flex: initial; padding: 6px 16px;">CLOSE</button>
+      </div>
+    </div>
+  </div>
+  <!-- Author & Guide Modal (< nissshh / >) - Authentic Swiss Editorial Manual -->
+  <div class="swiss-modal-scrim" id="guide-modal" style="z-index: 1050;">
+    <div class="swiss-modal-dialog guide-modal-dialog">
+      <div class="modal-title-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300;"></span>
+          <h2 style="margin: 0; font-family: 'Space Mono', monospace; font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; color: #000; text-transform: uppercase;">
+            REDDIZ MANUAL &amp; API KEYS // &lt; nissshh / &gt;
+          </h2>
+        </div>
+        <button id="btn-close-guide-modal" class="modal-close-btn" title="Close manual">&times;</button>
+      </div>
+
+      <div class="modal-body-pad">
+        <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #000;">
+          <h3 style="font-family: 'Space Mono', monospace; font-size: 1.05rem; font-weight: 900; margin: 0 0 8px 0; color: #000; letter-spacing: -0.02em;">
+            OPERATOR HANDBOOK // WORKFLOW INSTRUCTIONS
+          </h3>
+          <p style="font-size: 0.86rem; line-height: 1.55; color: #444; margin: 0;">
+            REDDIZ is a high-throughput dataset authoring workstation built for visual dataset generation, portrait training, and fine-tuning. It harvests Reddit image boards, formats training captions, bounds objects, and packages clean datasets.
+          </p>
+        </div>
+
+        <div class="guide-steps-grid">
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">01 /</span> FETCH MEDIA
+            </div>
+            <p class="guide-step-body">
+              Type target subreddits in the top bar (e.g. <code>streetphotography, cats, wallpapers</code>) and press Enter. All media streams into the vertical filmstrip ready for annotation.
+            </p>
+          </div>
+
+          <div class="guide-step-card accent-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">02 /</span> MULTIMODAL AI VISION
+            </div>
+            <p class="guide-step-body">
+              Use the inline model picker in the caption header or click <strong>&#10022; PROMPT</strong> to analyze the image with Google Gemini, OpenAI ChatGPT, Anthropic Claude, or Groq Vision. The engine automatically outputs objective subject poses, facial features, Indian regional traits, lighting, shadows, and environment.
+            </p>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">03 /</span> BOUNDING BOXES &amp; TOKENS
+            </div>
+            <p class="guide-step-body">
+              Click and drag directly on the canvas to draw class boxes (<code>subject</code>, <code>foreground</code>, <code>background</code>). Add specific trigger tags or tokens with Enter.
+            </p>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">04 /</span> SPEED KEYS &amp; EXPORT
+            </div>
+            <p class="guide-step-body">
+              Press <strong>[ENTER]</strong> to Save &amp; Advance &bull; <strong>[X]</strong> to Ignore &bull; <strong>[&uarr; / &darr;]</strong> or <strong>[A / D]</strong> to navigate. When done, click <strong>DONE &amp; DOWNLOAD ZIP</strong> for training-ready YOLO, COCO, or Stable Diffusion archives.
+            </p>
+          </div>
+        </div>
+
+        <h4 style="font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 900; letter-spacing: 0.08em; color: #000; margin: 10px 0 10px 0; text-transform: uppercase;">
+          DIRECT API KEY PORTALS
+        </h4>
+
+        <div class="guide-keys-list">
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="guide-key-link-row">
+            <div class="guide-key-left">
+              <span class="guide-badge">GEMINI</span>
+              <span class="guide-key-name">Google AI Studio (Gemini 3.8 / 2.0 / 1.5)</span>
+            </div>
+            <span class="guide-arrow">GET KEY &nearr;</span>
+          </a>
+
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="guide-key-link-row">
+            <div class="guide-key-left">
+              <span class="guide-badge">OPENAI</span>
+              <span class="guide-key-name">OpenAI Platform (GPT-4o / GPT-4o Mini)</span>
+            </div>
+            <span class="guide-arrow">GET KEY &nearr;</span>
+          </a>
+
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="guide-key-link-row">
+            <div class="guide-key-left">
+              <span class="guide-badge">CLAUDE</span>
+              <span class="guide-key-name">Anthropic Console (Claude 3.5 Sonnet / Haiku)</span>
+            </div>
+            <span class="guide-arrow">GET KEY &nearr;</span>
+          </a>
+
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="guide-key-link-row">
+            <div class="guide-key-left">
+              <span class="guide-badge">GROQ</span>
+              <span class="guide-key-name">Groq Cloud (Llama 3.2 11B / 90B Vision)</span>
+            </div>
+            <span class="guide-arrow">GET KEY &nearr;</span>
+          </a>
+
+          <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" class="guide-key-link-row">
+            <div class="guide-key-left">
+              <span class="guide-badge" style="background: #ffcc00; color: #000;">HUGGING FACE</span>
+              <span class="guide-key-name">Hugging Face Hub (BLIP / ViT / DETR Serverless)</span>
+            </div>
+            <span class="guide-arrow">GET KEY &nearr;</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-pad">
+        <span class="guide-footer-author">REDDIZ &bull; CREATED BY &lt; NISSSHH / &gt;</span>
+        <button id="btn-open-settings-from-guide" type="button" class="btn-ai-modal-save">
+          &#9881; CONFIGURE API KEYS &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Swiss Brutalist Error / Notice Modal - Clean Editorial Style -->
+  <div class="swiss-modal-scrim" id="error-modal" style="z-index: 1000;">
+    <div class="swiss-modal-dialog">
+      <div class="modal-title-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="display: inline-block; width: 10px; height: 10px; background: #ff3300; box-shadow: 0 0 8px #ff3300; flex-shrink:0;"></span>
+          <h2 id="error-modal-title">
+            SYSTEM NOTICE
+          </h2>
+        </div>
+        <button id="btn-close-error-modal" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-pad">
+        <div id="error-modal-badge">
+          ERROR / NOTICE
+        </div>
+
+        <p id="error-modal-message">
+          An unexpected issue occurred while processing your request.
+        </p>
+
+        <div id="error-modal-hint-box">
+          <strong>SUGGESTION:</strong> <span id="error-modal-hint-text">Check your settings or try again.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer-pad">
+        <button id="btn-error-open-settings" type="button">&#9881; OPEN AI SETTINGS</button>
+        <button id="btn-error-modal-ok" class="footer-btn btn-save">
+          ACKNOWLEDGE &rarr;
+        </button>
       </div>
     </div>
   </div>

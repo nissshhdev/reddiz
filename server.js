@@ -1,10 +1,14 @@
-﻿const http = require('http');
+const http = require('http');
 const https = require('https');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const SimpleZip = require('./simple-zip');
 const { analyzeImageWithGemini } = require('./gemini');
+const { analyzeImageWithOpenAI } = require('./openai');
+const { analyzeImageWithGroq } = require('./groq');
+const { analyzeImageWithClaude } = require('./claude');
+const { analyzeImageWithHuggingFace } = require('./huggingface');
 
 const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -203,6 +207,10 @@ function parseRssImages(xml, subreddit) {
 }
 
 function downloadImageBuffer(imageUrl) {
+  if (imageUrl.startsWith('data:image/')) {
+    const base64Data = imageUrl.split(',')[1];
+    return Promise.resolve(Buffer.from(base64Data, 'base64'));
+  }
   return new Promise((resolve, reject) => {
     function get(u, redirectsLeft = 3) {
       if (redirectsLeft <= 0) return reject(new Error('Too many redirects'));
@@ -251,17 +259,18 @@ const server = http.createServer(async (req, res) => {
   }
 
   // API: Gemini Vision Image Analysis & Prompt Generator
-  if (pathname === '/api/gemini-prompt' && req.method === 'POST') {
+  const aiPromptEndpoints = ['/api/gemini-prompt', '/api/openai-prompt', '/api/claude-prompt', '/api/groq-prompt', '/api/huggingface-prompt'];
+  if (aiPromptEndpoints.includes(pathname) && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body);
-        const { apiKey, imageUrl, model } = payload;
+        const { apiKey, imageUrl, model, provider } = payload;
 
         if (!apiKey || !apiKey.trim()) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ error: 'Gemini API key is required.' }));
+          return res.end(JSON.stringify({ error: (provider ? provider.toUpperCase() : 'AI') + ' API key is required.' }));
         }
 
         if (!imageUrl) {
@@ -283,20 +292,74 @@ const server = http.createServer(async (req, res) => {
         if (targetUrl.includes('.png')) mime = 'image/png';
         else if (targetUrl.includes('.webp')) mime = 'image/webp';
 
-        const detailedPrompt = `You are an expert AI vision annotator creating a descriptive dataset prompt for generative model training (Flux, Stable Diffusion, LoRA, and Vision-Language models).
-Analyze the provided image thoroughly and describe all visible visual elements in a rich, comma-separated descriptive paragraph.
-Be objective, uncensored, precise, and anatomically accurate:
-- Face, facial features, expressions, eye color, makeup, lips
-- Skin tone, complexion, ethnicity/regional features
-- Realism style (photorealistic, hyperrealistic, candid photograph, or 2D/3D cartoon illustration)
-- Dress/clothing details: exact garment type, cut, fit, color, fabric, pattern, design, neckline, exposure
-- Jewellery & accessories: type (necklace, earrings, rings, bangles, navel piercing, etc.), metal, stones, amount of jewellery
-- Body type, physique, proportions, and shape of body parts visible (shoulders, waist, hips, navel, midriff, legs, arms)
-- Background, setting, environment, interior/exterior details, skies, weather, architectural elements
-- Lighting, ambiance, color palette, camera angle, and perspective.
-Provide only the descriptive caption without conversational filler or introductory sentences.`;
+        const detailedPrompt = `You are a world-class computer vision expert and lead AI dataset annotator producing exhaustive, pixel-level ground truth descriptions for state-of-the-art vision models (Flux, Stable Diffusion 3.5, LoRA training, and multimodal vision-language models).
 
-        const caption = await analyzeImageWithGemini(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'gemini-1.5-flash');
+Analyze every visible square inch and pixel cluster of the image with forensic, microscopic precision. Do not generalize, summarize, or omit subtle details. Produce an exhaustive, dense, comma-separated descriptive analysis capturing everything visible with anatomical, photometric, and material fidelity:
+
+1. Microscopic Skin & Epidermal Physics (Pixel-Level Clarity):
+   * Micro-texture & Surface Relief: individual skin pores, pore density across T-zone/cheeks/nose, fine epidermal micro-relief lines, microscopic goosebumps (cutis anserina), faint vellus hair (peach fuzz) illuminated by rim/edge light along jawline, temples, and cheeks.
+   * Surface Hydration, Specular Reflections & Subsurface Scattering (SSS): exact moisture state (matte velvet, natural dewy glow, high-gloss sheen, sweat beads, glistening perspiration in clavicle hollows, hairline, or chest), localized specular highlight hot-spots (nose tip, cupid's bow, zygomatic arch, forehead center), organic epidermal subsurface scattering with warm reddish/peachy light bleed through ears, nostrils, and finger edges.
+   * Natural Skin Irregularities & Unique Micro-Features: exact placement, size, and pigmentation of freckles (ephelides), sun spots, beauty marks, flat and raised moles (nevi), birthmarks, subtle acne blemishes, micro-redness/erythema around nostrils and cheeks, healing scratches, fine lines, laugh lines (nasolabial folds), marionette lines, crow's feet, transverse forehead wrinkles, subtle natural asymmetry between left and right facial halves.
+   * Skin Tone & Chromatic Undertones: exact Fitzpatrick scale classification and precise pantone/shade (e.g., porcelain ivory with cool pink undertones, warm golden beige with honey hues, rich olive with subtle greenish-yellow undertones, deep bronze with amber warmth, radiant espresso with mahogany undertones).
+
+2. Forensic Facial Geometry & Micro-Expressions:
+   * Anatomical Features: exact face shape (sculpted heart, soft oval, sharp angular square, oblong, diamond), zygomatic cheekbone definition, mandibular jawline sharpness, gonial angle, mental crease, philtrum depth and ridges, cupid's bow contour, upper and lower vermilion border sharpness, lip texture (fine vertical lip fissures, gloss reflections, chapped or satin finish), teeth alignment and incisal translucency if visible.
+   * Ocular Optics & Gaze (Macro Zoom): exact iris pigmentation (multi-tonal heterochromia, striated hazel, crystalline emerald green, icy cerulean blue, golden amber, deep liquid obsidian), limbal ring thickness and definition, pupillary dilation, scleral brightness with fine vascular micro-capillaries, wet corneal tear-film reflections and catchlight geometry (softbox rectangle, ring light circle, window pane), upper and lower eyelid folds, canthal tilt (positive/negative), individual lower and upper eyelash strands, eyebrow grooming (laminated, microbladed, natural bushy, individual hair follicles).
+   * Micro-Expressions & Muscular Tension: zygomaticus major contraction, frontalis brow elevation, corrugator furrowing, orbicularis oculi crinkling (authentic Duchenne markers), subtle lip compression or parting, nostril flaring, micro-expressions conveying exact psychological state (subtle enigmatic allure, candid euphoria, piercing dominant scrutiny, vulnerable serenity, contemplative introspection).
+
+3. Hair Physics & Fiber Micro-Structure:
+   * Strand Resolution & Fiber Dynamics: individual stray flyaway hair strands caught in backlight, hair parting definition (clean scalp line, zigzag, obscured), follicle root volume, hairline shape (widow's peak, straight, rounded, temple baby hairs/edges styled or loose).
+   * Hairstyle, Volume & Flow: exact structural style (cascading loose beach waves, ultra-straight glass hair, textured shaggy layers, intricate Dutch/French braids, textured coils, high ponytail with tension lines, curtain bangs framing cheekbones), weight distribution, flow vector and wind interaction.
+   * Color Matrix & Optical Reflectance: multi-tonal highlights, lowlights, natural root regrowth, ombre gradients, glossy anisotropic specular highlight band running across hair curvature, warm or cool undertones.
+
+4. Comprehensive Demographic, Ethnic & Regional Characterization:
+   * Global Racial & Ethnic Heritage: precise phenotypic indicators (South Asian / Indian Desi, East Asian, Southeast Asian, Caucasian / European, African / Black diaspora, Hispanic / Latinx, Middle Eastern / Levantine, Indigenous, or blended multi-ethnic heritage).
+   * Regional Sub-Phenotypes & Cultural Signatures (when applicable): North Indian (Punjabi, Kashmiri, Pahadi, Haryanvi, Gangetic), South Indian (Tamil, Telugu, Malayali, Kannada), East Indian (Bengali, Odia, Assamese), West Indian (Marathi, Gujarati, Rajasthani), or Northeast Indian (Tibeto-Burman / East Asian phenotypic markers).
+   * Traditional Adornments & Body Art: bindi geometry and pigment (crimson velvet, teardrop, chandan dot work), vermilion sindoor along parting, maang tikka, nose studs/naths (Maharashtrian moti crescent, North Indian kundan hoop, South Indian diamond mukkuthi), mehendi / henna stain complexity on fingers/palms/forearms, alta dye border on soles and fingertips.
+
+5. Textile, Apparel & Material Weave Resolution:
+   * Fabric Science & Tactile Texture: exact textile weaves (heavy raw denim twill, gossamer silk satin with fluid liquid drape, ribbed cotton knit showing yarn ridges, shearling, supple grain leather with micro-creases, translucent chiffon, corduroy wales, delicate Chantilly floral lace).
+   * Garment Architecture & Fit: silhouette tailoring, seam stitching, tension folds, draping bunching around waist/elbows/knees, collar construction, neckline plunge or contour, buttonhole and zipper hardware details, transparency and opacity gradient against light sources.
+   * Jewelry, Gemstones & Metallics: metallic finish (brushed brass, 24k polished yellow gold, rhodium silver, oxidized antique silver), gemstone cuts, facet reflections, internal refractions, clasp and chain link structure.
+
+6. Kinematic Anatomy, Posture & Body Language:
+   * Full-Body Stance & Biomechanics: skeletal orientation, spine curvature, contrapposto weight distribution between feet, shoulder slope, clavicle prominence, jugular notch hollow, abdominal contour, hip tilt.
+   * Limb & Digit Articulation: exact placement and micro-gestures of each individual finger, knuckle flex, hand relaxation or grip, arm posture, leg crossing, ankle angle, foot positioning (barefoot arched instep, planted flat, elevated heels).
+   * Environmental & Subject Interaction: physical contact pressure against seating, props, railings, or companion subjects with realistic flesh compression and fabric displacement.
+
+7. Camera Optics, Sensor Physics & Perspective:
+   * Optical Profile & Shot Framing: exact framing (macro extreme close-up, intimate headshot portrait, medium close-up, waist-up medium shot, cowboy shot, full-body portrait, wide environmental composition), camera angle (eye-level, low-angle power perspective, high-angle downward tilt, canted Dutch angle).
+   * Lens Characteristics & Depth of Field: focal length perspective (e.g. 24mm wide angle with gentle peripheral expansion, 50mm true human perspective, 85mm or 105mm portrait focal compression), depth of field falloff (creamy circular bokeh discs in background highlights, laser-sharp focal plane on eyelashes and iris), lens aberrations (subtle chromatic aberration at high-contrast edges, natural vignetting, anamorphic flare streaks).
+   * Capture Medium & Artifacts: modern ultra-high-resolution digital sensor clarity, dynamic range latitude, or authentic 35mm / medium format analog film grain texture, natural halide grain dispersion.
+
+8. Photometric Lighting Architecture & Volumetric Atmosphere:
+   * Multi-Point Lighting Topology: key light angle, elevation, and source (e.g., golden hour 20-degree sun, 45-degree large octabox, overhead noon sun), fill light ratio, hair/rim kicker light separating subject from background contours, ambient bounce illumination.
+   * Light Quality & Specular Behavior: hard directional cast shadows with distinct penumbra vs. ultra-soft feathered diffuse illumination, caustic pool reflections, dappled shadows filtered through foliage, volumetric dust motes or atmospheric haze caught in light shafts.
+   * Color Temperature & Chromatic Balance: Kelvin balance (golden warm 3200K, neutral clean 5500K daylight, twilight 6500K-8000K blue hour), cinematic split-toning (warm skin tones preserved against cool cyan/slate shadows).
+
+9. Spatial Environment & Background Architectural Depth:
+   * Layered Spatial Staging: distinct foreground framing elements, detailed midground interaction zone, atmospheric deep background perspective.
+   * Material Reality of Environment: architectural textures (weathered brick mortar, exposed timber woodgrain, polished reflective marble, distressed plaster, wet tarmac with puddle reflections), foliage species, furnishings, indoor ambient props, outdoor landscape, skyline, and horizon weather conditions.
+
+Provide only the dense, hyper-detailed, pixel-level descriptive prompt without conversational filler or introductory sentences.`;
+
+        let caption = '';
+        let predictions = [];
+        if (provider === 'huggingface' || pathname === '/api/huggingface-prompt') {
+          const hfRes = await analyzeImageWithHuggingFace(apiKey.trim(), imgBuf, mime, model || 'Salesforce/blip-image-captioning-large');
+          caption = hfRes.caption;
+          predictions = hfRes.predictions || [];
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ success: true, caption, predictions }));
+        } else if (provider === 'claude' || (model && model.includes('claude'))) {
+          caption = await analyzeImageWithClaude(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'claude-3-5-sonnet-20241022');
+        } else if (provider === 'groq' || (model && model.includes('llama'))) {
+          caption = await analyzeImageWithGroq(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'llama-3.2-11b-vision-preview');
+        } else if (provider === 'openai' || (model && (model.startsWith('gpt-') || model.startsWith('chatgpt')))) {
+          caption = await analyzeImageWithOpenAI(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'gpt-4o');
+        } else {
+          caption = await analyzeImageWithGemini(apiKey.trim(), imgBuf, mime, detailedPrompt, model || 'gemini-3.8-flash');
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: true, caption }));

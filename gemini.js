@@ -1,9 +1,9 @@
-﻿const https = require('https');
+const https = require('https');
 
 // Helper to call Google Gemini API with selected model, multimodal image + prompt
-async function analyzeImageWithGemini(apiKey, imageBuffer, mimeType, prompt, model = 'gemini-1.5-flash') {
+async function analyzeImageWithGemini(apiKey, imageBuffer, mimeType, prompt, model = 'gemini-3.8-flash') {
   const base64Data = imageBuffer.toString('base64');
-  const cleanModel = (model || 'gemini-1.5-flash').trim();
+  const cleanModel = (model || 'gemini-3.8-flash').trim();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey}`;
 
   const requestBody = JSON.stringify({
