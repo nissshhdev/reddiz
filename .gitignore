@@ -1,4 +1,5 @@
 node_modules/
+model/
 *.log
 *.tmp
 *.zip
