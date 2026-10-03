@@ -1845,5 +1845,29 @@ async function generateAiPrompt(apiKey, model, provider) {
       if (uploadModal) uploadModal.classList.remove("open");
     });
   }
+
+  // Handle global paste events for images
+  window.addEventListener("paste", (e) => {
+    // Only intercept if we aren't typing in an input or textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    const files = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) files.push(file);
+      }
+    }
+    if (files.length > 0) {
+      handleFileSelection(files);
+      if (typeof window.openUploadModal === "function") {
+        window.openUploadModal();
+      }
+    }
+  });
 })();
 
